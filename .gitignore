@@ -2,6 +2,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 .DS_Store
+coverage/
 
 # VitePress
 **/.vitepress/cache/
