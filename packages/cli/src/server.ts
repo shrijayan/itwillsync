@@ -54,7 +54,7 @@ async function serveStaticFile(
 }
 
 /**
- * Creates the HTTP + WebSocket server for codename-sync.
+ * Creates the HTTP + WebSocket server for itwillsync.
  *
  * The HTTP server serves the static web client.
  * The WebSocket server handles authenticated terminal I/O forwarding.

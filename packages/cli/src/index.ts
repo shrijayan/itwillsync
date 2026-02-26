@@ -46,7 +46,7 @@ function parseArgs(argv: string[]): CliOptions {
       printHelp();
       process.exit(0);
     } else if (arg === "--version" || arg === "-v") {
-      console.log("codename-sync v0.1.0");
+      console.log("itwillsync v0.1.0");
       process.exit(0);
     } else {
       // If no -- separator, treat remaining args as the command
@@ -60,17 +60,17 @@ function parseArgs(argv: string[]): CliOptions {
 
 function printHelp(): void {
   console.log(`
-codename-sync — Sync any terminal agent to your phone
+itwillsync — Sync any terminal agent to your phone
 
 Usage:
-  codename-sync [options] -- <command> [args...]
-  codename-sync [options] <command> [args...]
+  itwillsync [options] -- <command> [args...]
+  itwillsync [options] <command> [args...]
 
 Examples:
-  codename-sync -- claude
-  codename-sync -- aider --model gpt-4
-  codename-sync bash
-  codename-sync --port 8080 -- claude
+  itwillsync -- claude
+  itwillsync -- aider --model gpt-4
+  itwillsync bash
+  itwillsync --port 8080 -- claude
 
 Options:
   --port <number>   Port to listen on (default: ${DEFAULT_PORT})

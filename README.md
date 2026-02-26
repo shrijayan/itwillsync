@@ -1,16 +1,16 @@
-# codename-sync
+# itwillsync
 
 Sync any terminal-based coding agent to your phone over local network. Open source, agent-agnostic, zero cloud.
 
 ```
-npx codename-sync -- claude
-npx codename-sync -- aider
-npx codename-sync -- bash
+npx itwillsync -- claude
+npx itwillsync -- aider
+npx itwillsync -- bash
 ```
 
 ## How it works
 
-1. Run `codename-sync` with your agent command
+1. Run `itwillsync` with your agent command
 2. A QR code appears in your terminal
 3. Scan it on your phone — opens a terminal in your browser
 4. Control your agent from your phone (or both phone and laptop simultaneously)
@@ -26,11 +26,11 @@ All data stays on your local network. No cloud, no relay, no account needed.
 
 ```bash
 # Run directly (no install needed)
-npx codename-sync -- claude
+npx itwillsync -- claude
 
 # Or install globally
-npm install -g codename-sync
-codename-sync -- aider --model gpt-4
+npm install -g itwillsync
+itwillsync -- aider --model gpt-4
 ```
 
 ## Options
@@ -45,7 +45,7 @@ codename-sync -- aider --model gpt-4
 
 ## Remote Access
 
-By default, codename-sync is accessible on your local network (same WiFi). For remote access from anywhere:
+By default, itwillsync is accessible on your local network (same WiFi). For remote access from anywhere:
 
 - **Tailscale** (recommended): Install on both devices, access via Tailscale IP
 - **WireGuard / VPN**: Any VPN that puts devices on the same network
@@ -63,7 +63,7 @@ By default, codename-sync is accessible on your local network (same WiFi). For r
 ```
 Your Machine                          Your Phone
 ┌─────────────────────┐              ┌──────────────┐
-│ codename-sync       │   WiFi/LAN   │  Browser     │
+│ itwillsync          │   WiFi/LAN   │  Browser     │
 │ ├─ PTY (your agent) │◄────────────►│  xterm.js    │
 │ ├─ HTTP server      │  WebSocket   │  terminal    │
 │ └─ WS server        │              └──────────────┘
@@ -76,14 +76,14 @@ Your Machine                          Your Phone
 - **Multiple devices**: Connect from phone, tablet, and laptop simultaneously — all see the same terminal.
 - **Reconnect**: If your phone disconnects (WiFi switch, screen lock), it auto-reconnects and catches up with recent output.
 - **Keepalive**: WebSocket pings every 30s prevent routers from closing idle connections.
-- **One session per instance**: Run multiple `codename-sync` instances on different ports for multiple agents.
+- **One session per instance**: Run multiple `itwillsync` instances on different ports for multiple agents.
 
 ## Development
 
 ```bash
 # 1. Clone and enter the project
-git clone https://github.com/your-username/codename-sync
-cd codename-sync
+git clone https://github.com/your-username/itwillsync
+cd itwillsync
 
 # 2. Use Node 22 (required for node-pty native bindings)
 nvm use  # reads .nvmrc

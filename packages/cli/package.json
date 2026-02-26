@@ -1,10 +1,10 @@
 {
-  "name": "codename-sync",
+  "name": "itwillsync",
   "version": "0.1.0",
   "description": "Sync any terminal-based coding agent to your phone over local network",
   "type": "module",
   "bin": {
-    "codename-sync": "./dist/index.js"
+    "itwillsync": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

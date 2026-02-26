@@ -1,8 +1,8 @@
 {
-  "name": "codename-sync-root",
+  "name": "itwillsync-root",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter @codename-sync/web-client build && pnpm --filter codename-sync build",
+    "build": "pnpm --filter @itwillsync/web-client build && pnpm --filter itwillsync build",
     "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r clean"
   },
