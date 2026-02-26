@@ -2,9 +2,11 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import "@xterm/xterm/css/xterm.css";
+import { createExtraKeys, applyModifiers, hasActiveModifier } from "./extra-keys";
 
 // --- DOM Elements ---
 const terminalContainer = document.getElementById("terminal-container")!;
+const extraKeysContainer = document.getElementById("extra-keys")!;
 const statusDot = document.getElementById("status-dot")!;
 const statusText = document.getElementById("status-text")!;
 
@@ -151,29 +153,63 @@ function sendResize(): void {
   }
 }
 
-// --- Terminal Input → WebSocket ---
-terminal.onData((data: string) => {
+// --- Send input to server ---
+function sendInput(data: string): void {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({
       type: "input",
       data,
     }));
   }
+}
+
+// --- Terminal Input → WebSocket (with modifier intercept) ---
+terminal.onData((data: string) => {
+  // If CTRL or ALT is armed, apply modifier to the soft keyboard input
+  const modified = hasActiveModifier() ? applyModifiers(data) : data;
+  sendInput(modified);
 });
 
-// --- Handle Resize ---
-window.addEventListener("resize", () => {
+// --- Extra Keys Toolbar ---
+createExtraKeys(extraKeysContainer, sendInput);
+
+// --- Handle Resize + Keyboard Detection ---
+
+// Track keyboard height so extra keys bar floats above it
+let lastKeyboardHeight = 0;
+
+function updateLayout(): void {
+  const vv = window.visualViewport;
+  const extraKeysBarHeight = extraKeysContainer.offsetHeight;
+
+  if (vv) {
+    // The keyboard height = full window height - visible viewport height - viewport offset
+    // When keyboard is open, visualViewport.height shrinks
+    const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+    lastKeyboardHeight = Math.max(0, keyboardHeight);
+
+    // Position extra keys bar just above the keyboard
+    extraKeysContainer.style.bottom = `${lastKeyboardHeight}px`;
+  }
+
+  // Terminal needs space for: status bar (32px) + extra keys bar + keyboard
+  const totalBottomSpace = extraKeysBarHeight + lastKeyboardHeight;
+  document.documentElement.style.setProperty("--extra-keys-height", `${totalBottomSpace}px`);
+
   fitAddon.fit();
   sendResize();
-});
-
-// Handle mobile keyboard show/hide
-if ("visualViewport" in window && window.visualViewport) {
-  window.visualViewport.addEventListener("resize", () => {
-    fitAddon.fit();
-    sendResize();
-  });
 }
+
+window.addEventListener("resize", updateLayout);
+
+// visualViewport is the key API for detecting soft keyboard on mobile
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", updateLayout);
+  window.visualViewport.addEventListener("scroll", updateLayout);
+}
+
+// Initial layout calculation after extra keys are rendered
+requestAnimationFrame(updateLayout);
 
 // --- Focus terminal on tap (mobile) ---
 terminalContainer.addEventListener("touchstart", () => {
