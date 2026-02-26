@@ -5,6 +5,36 @@ import { createSyncServer } from "./server.js";
 import { displayQR } from "./qr.js";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
+import { spawn, type ChildProcess } from "node:child_process";
+
+/**
+ * Prevents the system from idle-sleeping while a sync session is active.
+ * Uses OS-native tools — auto-releases when itwillsync exits.
+ */
+function preventSleep(): ChildProcess | null {
+  try {
+    if (process.platform === "darwin") {
+      // caffeinate -i = prevent idle sleep, -w PID = auto-exit when our process dies
+      const child = spawn("caffeinate", ["-i", "-w", String(process.pid)], {
+        stdio: "ignore",
+        detached: true,
+      });
+      child.unref();
+      return child;
+    } else if (process.platform === "linux") {
+      // systemd-inhibit blocks idle sleep; "sleep infinity" keeps it alive
+      return spawn("systemd-inhibit", [
+        "--what=idle",
+        "--who=itwillsync",
+        "--why=Terminal sync session active",
+        "sleep", "infinity",
+      ], { stdio: "ignore" });
+    }
+  } catch {
+    // Sleep prevention is best-effort — don't crash if tool is missing
+  }
+  return null;
+}
 
 const DEFAULT_PORT = 3456;
 
@@ -127,9 +157,13 @@ async function main(): Promise<void> {
     console.log(`\n  Connect at: ${url}\n`);
   }
 
+  // Prevent laptop from sleeping during session
+  const sleepGuard = preventSleep();
+
   console.log(`  Server listening on ${host}:${port}`);
   console.log(`  Running: ${options.command.join(" ")}`);
   console.log(`  PID: ${ptyManager.pid}`);
+  console.log(`  Sleep prevention: ${sleepGuard ? "active" : "unavailable"}`);
   console.log("");
 
   // Pipe local terminal I/O to/from the PTY
@@ -163,6 +197,7 @@ async function main(): Promise<void> {
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(false);
     }
+    sleepGuard?.kill();
     server.close();
     ptyManager.kill();
   }
