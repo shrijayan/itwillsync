@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+
+      - name: Install native build tools
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+
+      - uses: pnpm/action-setup@v4
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+
+      - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+
+      - run: pnpm build
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+
+      - name: Publish to npm
+        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+        run: pnpm --filter itwillsync publish --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
