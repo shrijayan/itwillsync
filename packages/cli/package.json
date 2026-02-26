@@ -1,0 +1,40 @@
+{
+  "name": "codename-sync",
+  "version": "0.1.0",
+  "description": "Sync any terminal-based coding agent to your phone over local network",
+  "type": "module",
+  "bin": {
+    "codename-sync": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path'),d=p.join(require.resolve('node-pty'),'..','..','prebuilds',process.platform+'-'+process.arch,'spawn-helper');try{fs.chmodSync(d,0o755)}catch{}\""
+  },
+  "keywords": [
+    "agent",
+    "sync",
+    "terminal",
+    "remote",
+    "mobile",
+    "claude",
+    "aider",
+    "coding-agent"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  }
+}

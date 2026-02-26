@@ -1,0 +1,12 @@
+{
+  "name": "codename-sync-root",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @codename-sync/web-client build && pnpm --filter codename-sync build",
+    "dev": "pnpm -r --parallel dev",
+    "clean": "pnpm -r clean"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
