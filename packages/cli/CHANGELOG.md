@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/shrijayan/itwillsync/compare/v1.0.0...v1.0.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* implement gzip compression for static file serving and improve error handling in web client ([1f27c01](https://github.com/shrijayan/itwillsync/commit/1f27c01d6427698e3f7eb811a683ee52cc1bf771))
+
 # 1.0.0 (2026-02-26)
 
 
