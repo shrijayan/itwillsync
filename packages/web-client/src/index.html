@@ -16,6 +16,25 @@
   </div>
   <div id="terminal-container"></div>
   <div id="extra-keys"></div>
+  <script>
+    // Inline fallback: if the main JS module fails to load or crashes,
+    // show a meaningful error instead of staying stuck at "Connecting..."
+    window.__itwillsync_loaded = false;
+    window.onerror = function(msg) {
+      if (!window.__itwillsync_loaded) {
+        var el = document.getElementById("status-text");
+        if (el) el.textContent = "Error: " + msg;
+      }
+    };
+    setTimeout(function() {
+      if (!window.__itwillsync_loaded) {
+        var el = document.getElementById("status-text");
+        if (el && el.textContent === "Connecting...") {
+          el.textContent = "Failed to load — try refreshing";
+        }
+      }
+    }, 10000);
+  </script>
   <script type="module" src="./main.ts"></script>
 </body>
 </html>
