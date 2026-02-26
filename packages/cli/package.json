@@ -25,7 +25,17 @@
     "aider",
     "coding-agent"
   ],
+  "author": "Shrijayan Rajendran",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shrijayan/itwillsync.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/shrijayan/itwillsync/issues"
+  },
+  "homepage": "https://github.com/shrijayan/itwillsync#readme",
   "engines": {
     "node": ">=20.0.0"
   },
