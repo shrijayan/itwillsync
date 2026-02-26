@@ -1,6 +1,6 @@
 {
   "name": "itwillsync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sync any terminal-based coding agent to your phone over local network",
   "type": "module",
   "bin": {
