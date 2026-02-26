@@ -1,11 +1,12 @@
 /**
  * Termux-style extra keys toolbar for mobile terminal interaction.
  *
- * Layout (2 rows x 7 keys):
+ * Layout (2 rows):
  *   Row 1: ESC  /  —  HOME  ↑  END  PGUP
- *   Row 2: TAB  CTRL  ALT  ←  ↓  →  PGDN
+ *   Row 2: TAB  CTRL  ALT  SHIFT  ←  ↓  →  PGDN
  *
- * CTRL and ALT are sticky one-shot modifiers.
+ * CTRL, ALT, and SHIFT are sticky one-shot modifiers.
+ * CTRL and ALT are mutually exclusive; SHIFT combines with either.
  */
 
 // --- Key definitions ---
@@ -30,6 +31,7 @@ const ROW2: KeyDef[] = [
   { label: "TAB", sequence: "\t" },
   { label: "CTRL", sequence: null, isModifier: true },
   { label: "ALT", sequence: null, isModifier: true },
+  { label: "SHIFT", sequence: null, isModifier: true },
   { label: "←", sequence: "\x1b[D" },
   { label: "↓", sequence: "\x1b[B" },
   { label: "→", sequence: "\x1b[C" },
@@ -40,35 +42,75 @@ const ROW2: KeyDef[] = [
 
 let ctrlActive = false;
 let altActive = false;
+let shiftActive = false;
 let ctrlButton: HTMLElement | null = null;
 let altButton: HTMLElement | null = null;
+let shiftButton: HTMLElement | null = null;
 
 /**
  * Apply active modifiers to a sequence/character.
  * Returns the modified sequence and resets modifier state.
+ *
+ * Encoding rules (standard xterm):
+ *   - Shift+Tab: dedicated backtab \x1b[Z (universally supported)
+ *   - CSI letter sequences (arrows, Home, End): \x1b[1;{mod}X
+ *   - CSI number-tilde sequences (PgUp, PgDn): \x1b[N;{mod}~
+ *   - Single printable chars: Ctrl codes (A-Z) / Alt ESC prefix / Shift uppercase
+ *   - Tab/ESC with Ctrl: pass through (Tab=Ctrl+I, ESC=Ctrl+[)
+ *   - Tab/ESC with Alt: ESC prefix
  */
 export function applyModifiers(data: string): string {
+  if (!ctrlActive && !altActive && !shiftActive) return data;
+
   let result = data;
 
-  if (ctrlActive) {
-    // For single printable characters, convert to control code
-    if (result.length === 1) {
+  // xterm modifier param: 1 + (shift:1 | alt:2 | ctrl:4)
+  const modParam =
+    1 +
+    ((shiftActive ? 1 : 0) | (altActive ? 2 : 0) | (ctrlActive ? 4 : 0));
+
+  // CSI letter: \x1b[A (arrows, Home, End)
+  const csiLetter = result.match(/^\x1b\[([A-Z])$/);
+  // CSI number-tilde: \x1b[5~ (PgUp, PgDn)
+  const csiTilde = result.match(/^\x1b\[(\d+)~$/);
+
+  if (result === "\t" && shiftActive && !ctrlActive && !altActive) {
+    // Shift+Tab: dedicated backtab sequence (universally supported)
+    result = "\x1b[Z";
+  } else if (csiLetter) {
+    // \x1b[A → \x1b[1;5A (Ctrl+Up), \x1b[1;2A (Shift+Up), etc.
+    result = `\x1b[1;${modParam}${csiLetter[1]}`;
+  } else if (csiTilde) {
+    // \x1b[5~ → \x1b[5;5~ (Ctrl+PgUp), etc.
+    result = `\x1b[${csiTilde[1]};${modParam}~`;
+  } else if (result.length === 1) {
+    // Single printable character
+    if (shiftActive && !ctrlActive && !altActive) {
+      result = result.toUpperCase();
+    }
+    if (ctrlActive) {
       const code = result.toUpperCase().charCodeAt(0);
-      // Ctrl+A through Ctrl+Z (and some punctuation)
       if (code >= 64 && code <= 95) {
         result = String.fromCharCode(code - 64);
       }
     }
-    ctrlActive = false;
-    ctrlButton?.classList.remove("active");
-  }
-
-  if (altActive) {
-    // Alt prefix: ESC + sequence
+    if (altActive) {
+      result = "\x1b" + result;
+    }
+  } else if (altActive) {
+    // Alt + non-CSI multi-char sequence (Tab, ESC): ESC prefix
     result = "\x1b" + result;
-    altActive = false;
-    altButton?.classList.remove("active");
   }
+  // Ctrl+Tab → \t (Tab = Ctrl+I, indistinguishable in terminal protocol)
+  // Ctrl+ESC → \x1b (pass through)
+
+  // Reset all modifier state
+  ctrlActive = false;
+  ctrlButton?.classList.remove("active");
+  altActive = false;
+  altButton?.classList.remove("active");
+  shiftActive = false;
+  shiftButton?.classList.remove("active");
 
   return result;
 }
@@ -77,7 +119,7 @@ export function applyModifiers(data: string): string {
  * Check if any modifier is currently armed.
  */
 export function hasActiveModifier(): boolean {
-  return ctrlActive || altActive;
+  return ctrlActive || altActive || shiftActive;
 }
 
 /**
@@ -104,6 +146,7 @@ export function createExtraKeys(
         btn.classList.add("modifier");
         if (key.label === "CTRL") ctrlButton = btn;
         if (key.label === "ALT") altButton = btn;
+        if (key.label === "SHIFT") shiftButton = btn;
       }
 
       // Handle key press
@@ -116,7 +159,7 @@ export function createExtraKeys(
           if (key.label === "CTRL") {
             ctrlActive = !ctrlActive;
             btn.classList.toggle("active", ctrlActive);
-            // If turning on CTRL, turn off ALT
+            // CTRL and ALT are mutually exclusive
             if (ctrlActive) {
               altActive = false;
               altButton?.classList.remove("active");
@@ -124,11 +167,15 @@ export function createExtraKeys(
           } else if (key.label === "ALT") {
             altActive = !altActive;
             btn.classList.toggle("active", altActive);
-            // If turning on ALT, turn off CTRL
+            // ALT and CTRL are mutually exclusive
             if (altActive) {
               ctrlActive = false;
               ctrlButton?.classList.remove("active");
             }
+          } else if (key.label === "SHIFT") {
+            // SHIFT is independent — combines with CTRL or ALT
+            shiftActive = !shiftActive;
+            btn.classList.toggle("active", shiftActive);
           }
         } else if (key.sequence !== null) {
           // Apply any active modifiers to the sequence
