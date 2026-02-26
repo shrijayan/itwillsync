@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/shrijayan/itwillsync/compare/v1.0.2...v1.0.3) (2026-02-26)
+
+
+### Bug Fixes
+
+* update package dependencies for improved compatibility and performance ([2f9712a](https://github.com/shrijayan/itwillsync/commit/2f9712a2a3b3dbce26f875c9a9dd9361e533a189))
+
 ## [1.0.2](https://github.com/shrijayan/itwillsync/compare/v1.0.1...v1.0.2) (2026-02-26)
 
 
