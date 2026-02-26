@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/shrijayan/itwillsync/compare/v1.0.1...v1.0.2) (2026-02-26)
+
+
+### Bug Fixes
+
+* add repeatable key functionality for extra keys and improve long-press handling ([729bd68](https://github.com/shrijayan/itwillsync/commit/729bd687ef6d30c17dbd0b8c40fa30070efa5163))
+
 ## [1.0.1](https://github.com/shrijayan/itwillsync/compare/v1.0.0...v1.0.1) (2026-02-26)
 
 
