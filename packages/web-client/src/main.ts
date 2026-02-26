@@ -98,7 +98,9 @@ function setStatus(state: "connected" | "disconnected" | "reconnecting"): void {
     state === "connected"
       ? "Connected"
       : state === "reconnecting"
-        ? `Reconnecting (attempt ${reconnectAttempts})...`
+        ? reconnectAttempts > 5
+          ? "Waiting for laptop to wake up..."
+          : `Reconnecting (attempt ${reconnectAttempts})...`
         : "Disconnected";
 
   // Manage reconnect overlay

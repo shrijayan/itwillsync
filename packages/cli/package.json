@@ -6,6 +6,9 @@
   "bin": {
     "itwillsync": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
