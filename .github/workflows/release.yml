@@ -1,49 +1,49 @@
-name: Release
+name: Release & Publish to NPM
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  release-please:
+  release:
+    name: Semantic Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-      - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+          fetch-depth: 0
 
       - name: Install native build tools
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
 
       - uses: pnpm/action-setup@v4
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
 
       - uses: actions/setup-node@v4
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
-
       - run: pnpm build
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
 
-      - name: Publish to npm
-        if: ${{ steps.release.outputs['packages/cli--release_created'] }}
-        run: pnpm --filter itwillsync publish --no-git-checks --access public
+      - name: Semantic Release
+        run: npx semantic-release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
