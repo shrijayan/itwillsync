@@ -219,5 +219,6 @@ terminalContainer.addEventListener("touchstart", () => {
 });
 
 // --- Start ---
+(window as any).__itwillsync_loaded = true;
 terminal.focus();
 connect();

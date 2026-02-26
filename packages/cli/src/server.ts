@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { join, extname } from "node:path";
+import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import type { PtyManager } from "./pty-manager.js";
 import { validateToken } from "./auth.js";
@@ -30,13 +31,21 @@ export interface SyncServer {
   close(): void;
 }
 
+/** Extensions eligible for gzip compression. */
+const COMPRESSIBLE = new Set([".html", ".js", ".css", ".json", ".svg"]);
+
+/** In-memory cache for gzipped static files (populated on first request). */
+const gzipCache = new Map<string, Buffer>();
+
 /**
  * Serves a static file from the web client directory.
+ * Applies gzip compression for text-based assets when the client supports it.
  * Returns 404 if the file is not found.
  */
 async function serveStaticFile(
   webClientPath: string,
   filePath: string,
+  req: IncomingMessage,
   res: ServerResponse,
 ): Promise<void> {
   const fullPath = join(webClientPath, filePath);
@@ -44,9 +53,28 @@ async function serveStaticFile(
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
   try {
-    const content = await readFile(fullPath);
-    res.writeHead(200, { "Content-Type": contentType });
-    res.end(content);
+    const raw = await readFile(fullPath);
+    const acceptsGzip = (req.headers["accept-encoding"] || "").includes("gzip");
+
+    if (acceptsGzip && COMPRESSIBLE.has(ext)) {
+      let compressed = gzipCache.get(fullPath);
+      if (!compressed) {
+        compressed = gzipSync(raw);
+        gzipCache.set(fullPath, compressed);
+      }
+      res.writeHead(200, {
+        "Content-Type": contentType,
+        "Content-Encoding": "gzip",
+        "Content-Length": compressed.length,
+      });
+      res.end(compressed);
+    } else {
+      res.writeHead(200, {
+        "Content-Type": contentType,
+        "Content-Length": raw.length,
+      });
+      res.end(raw);
+    }
   } catch {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
@@ -81,7 +109,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       pathname = "/index.html";
     }
 
-    await serveStaticFile(webClientPath, pathname, res);
+    await serveStaticFile(webClientPath, pathname, req, res);
   });
 
   // --- WebSocket Server ---
