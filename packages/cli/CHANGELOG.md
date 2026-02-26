@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/shrijayan/itwillsync/compare/v1.0.3...v1.0.4) (2026-02-26)
+
+
+### Bug Fixes
+
+* implement ensureSpawnHelperPermissions function to set execute permissions for spawn-helper binary ([6e06cb6](https://github.com/shrijayan/itwillsync/commit/6e06cb67b07ac3a4193b8f22f25d7a5393d8ec71))
+
 ## [1.0.3](https://github.com/shrijayan/itwillsync/compare/v1.0.2...v1.0.3) (2026-02-26)
 
 
