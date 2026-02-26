@@ -15,6 +15,7 @@ interface KeyDef {
   label: string;
   sequence: string | null; // null = modifier key
   isModifier?: boolean;
+  repeatable?: boolean;
 }
 
 const ROW1: KeyDef[] = [
@@ -22,7 +23,7 @@ const ROW1: KeyDef[] = [
   { label: "/", sequence: "/" },
   { label: "—", sequence: "-" },
   { label: "HOME", sequence: "\x1b[H" },
-  { label: "↑", sequence: "\x1b[A" },
+  { label: "↑", sequence: "\x1b[A", repeatable: true },
   { label: "END", sequence: "\x1b[F" },
   { label: "PGUP", sequence: "\x1b[5~" },
 ];
@@ -32,9 +33,9 @@ const ROW2: KeyDef[] = [
   { label: "CTRL", sequence: null, isModifier: true },
   { label: "ALT", sequence: null, isModifier: true },
   { label: "SHIFT", sequence: null, isModifier: true },
-  { label: "←", sequence: "\x1b[D" },
-  { label: "↓", sequence: "\x1b[B" },
-  { label: "→", sequence: "\x1b[C" },
+  { label: "←", sequence: "\x1b[D", repeatable: true },
+  { label: "↓", sequence: "\x1b[B", repeatable: true },
+  { label: "→", sequence: "\x1b[C", repeatable: true },
   { label: "PGDN", sequence: "\x1b[6~" },
 ];
 
@@ -149,7 +150,7 @@ export function createExtraKeys(
         if (key.label === "SHIFT") shiftButton = btn;
       }
 
-      // Handle key press
+      // Handle key press (single fire for modifiers and non-repeatable keys)
       const handlePress = (e: Event) => {
         e.preventDefault(); // Prevent focus loss from xterm.js
         e.stopPropagation();
@@ -184,10 +185,60 @@ export function createExtraKeys(
         }
       };
 
-      // Use touchstart for mobile (instant, prevents keyboard dismiss)
-      btn.addEventListener("touchstart", handlePress, { passive: false });
-      // Click fallback for desktop testing
-      btn.addEventListener("click", handlePress);
+      if (key.repeatable && key.sequence !== null) {
+        // Long-press repeat for arrow keys
+        let repeatTimeout: ReturnType<typeof setTimeout> | null = null;
+        let repeatInterval: ReturnType<typeof setInterval> | null = null;
+        let touchFired = false;
+
+        const stopRepeat = () => {
+          if (repeatTimeout !== null) {
+            clearTimeout(repeatTimeout);
+            repeatTimeout = null;
+          }
+          if (repeatInterval !== null) {
+            clearInterval(repeatInterval);
+            repeatInterval = null;
+          }
+        };
+
+        const startRepeat = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          stopRepeat();
+
+          // Fire immediately (first press applies modifiers)
+          const data = applyModifiers(key.sequence!);
+          sendInput(data);
+
+          // After initial delay, repeat at 60ms intervals (raw sequence, no modifiers)
+          repeatTimeout = setTimeout(() => {
+            repeatInterval = setInterval(() => {
+              sendInput(key.sequence!);
+            }, 60);
+          }, 300);
+        };
+
+        btn.addEventListener("touchstart", (e: Event) => {
+          touchFired = true;
+          startRepeat(e);
+        }, { passive: false });
+        btn.addEventListener("touchend", stopRepeat);
+        btn.addEventListener("touchcancel", stopRepeat);
+
+        // Desktop: mouse hold to repeat
+        btn.addEventListener("mousedown", (e: Event) => {
+          if (touchFired) { touchFired = false; return; }
+          startRepeat(e);
+        });
+        btn.addEventListener("mouseup", stopRepeat);
+        btn.addEventListener("mouseleave", stopRepeat);
+      } else {
+        // Use touchstart for mobile (instant, prevents keyboard dismiss)
+        btn.addEventListener("touchstart", handlePress, { passive: false });
+        // Click fallback for desktop testing
+        btn.addEventListener("click", handlePress);
+      }
 
       row.appendChild(btn);
     }
