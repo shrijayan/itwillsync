@@ -12,8 +12,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "clean": "rm -rf dist",
-    "postinstall": "node -e \"const fs=require('fs'),p=require('path'),d=p.join(require.resolve('node-pty'),'..','..','prebuilds',process.platform+'-'+process.arch,'spawn-helper');try{fs.chmodSync(d,0o755)}catch{}\""
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "agent",

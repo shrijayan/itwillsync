@@ -1,4 +1,7 @@
 import * as pty from "node-pty";
+import { chmodSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Detects the user's default shell based on the platform.
@@ -30,6 +33,29 @@ function buildEnv(): Record<string, string> {
   return env;
 }
 
+/**
+ * Ensures node-pty's spawn-helper binary has execute permissions.
+ * This runs at startup instead of via a postinstall script to avoid
+ * Socket.dev "install scripts" supply chain risk warnings.
+ */
+function ensureSpawnHelperPermissions(): void {
+  if (process.platform === "win32") return;
+  try {
+    const ptyEntryUrl = import.meta.resolve("node-pty");
+    const ptyDir = dirname(fileURLToPath(ptyEntryUrl));
+    const helperPath = join(
+      ptyDir,
+      "..",
+      "prebuilds",
+      `${process.platform}-${process.arch}`,
+      "spawn-helper"
+    );
+    chmodSync(helperPath, 0o755);
+  } catch {
+    // spawn-helper may not exist on all platforms; safe to ignore
+  }
+}
+
 export class PtyManager {
   private ptyProcess: pty.IPty;
 
@@ -37,6 +63,8 @@ export class PtyManager {
   readonly pid: number;
 
   constructor(command: string, args: string[]) {
+    ensureSpawnHelperPermissions();
+
     const useConpty = process.platform === "win32";
 
     this.ptyProcess = pty.spawn(command, args, {
