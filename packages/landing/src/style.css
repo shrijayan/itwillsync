@@ -314,8 +314,21 @@ code {
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.6;
-  min-height: 320px;
-  overflow: hidden;
+  height: 340px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.terminal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.terminal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.terminal-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
 }
 
 .terminal-body pre {
@@ -662,7 +675,7 @@ code {
   .terminal-body {
     font-size: 12px;
     padding: 14px;
-    min-height: 260px;
+    height: 280px;
   }
 
   .section {
