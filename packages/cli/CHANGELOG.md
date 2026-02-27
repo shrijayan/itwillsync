@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/shrijayan/itwillsync/compare/v1.0.5...v1.0.6) (2026-02-27)
+
+
+### Bug Fixes
+
+* update version badge to reflect latest release and enhance terminal animation output ([5d15710](https://github.com/shrijayan/itwillsync/commit/5d157106a820cd18998c2c2332afcf50046a28cd))
+
 ## [1.0.5](https://github.com/shrijayan/itwillsync/compare/v1.0.4...v1.0.5) (2026-02-27)
 
 
