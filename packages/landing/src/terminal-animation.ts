@@ -8,128 +8,74 @@ interface Line {
   instant?: boolean;
 }
 
-interface Phase {
-  lines: Line[];
-  delayAfter: number;
-}
-
 const CHAR_DELAY = 55;
-const LINE_DELAY = 120;
-const HOLD_DURATION = 5000;
+const HOLD_DURATION = 4000;
 const FADE_DURATION = 400;
 const INITIAL_DELAY = 800;
 
+const AGENTS = ["claude", "cline", "copilot", "aider", "goose", "bash"];
+
+// Compact QR using half-block characters (▀▄█ ) — ~half the height
 const QR_ART = [
-  "  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-  "  \u2588\u2588          \u2588\u2588  \u2588\u2588\u2588\u2588  \u2588\u2588          \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588    \u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588    \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588",
-  "  \u2588\u2588          \u2588\u2588        \u2588\u2588          \u2588\u2588",
-  "  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-  "                  \u2588\u2588\u2588\u2588",
-  "  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588    \u2588\u2588  \u2588\u2588    \u2588\u2588\u2588\u2588",
-  "      \u2588\u2588\u2588\u2588    \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588    \u2588\u2588\u2588\u2588  \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2588",
-  "                  \u2588\u2588    \u2588\u2588      \u2588\u2588",
-  "  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588    \u2588\u2588  \u2588\u2588\u2588\u2588",
-  "  \u2588\u2588          \u2588\u2588    \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588    \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588    \u2588\u2588  \u2588\u2588",
-  "  \u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588    \u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588",
-  "  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588  \u2588\u2588  \u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2588",
+  "  \u2588\u2580\u2580\u2580\u2580\u2580\u2588 \u2584\u2580 \u2588\u2580\u2580\u2580\u2580\u2580\u2588",
+  "  \u2588 \u2588\u2588\u2588 \u2588 \u2580\u2584 \u2588 \u2588\u2588\u2588 \u2588",
+  "  \u2588\u2584\u2584\u2584\u2584\u2584\u2588 \u2588 \u2588\u2584\u2584\u2584\u2584\u2584\u2588",
+  "   \u2584\u2580\u2584 \u2580\u2584\u2580\u2588\u2584\u2580 \u2584\u2580 ",
+  "  \u2588\u2584\u2580\u2588\u2580\u2580\u2584\u2588 \u2580\u2584\u2588\u2584\u2580\u2588\u2584",
+  "  \u2588\u2580\u2580\u2580\u2580\u2580\u2588 \u2588\u2580 \u2584\u2580\u2588 ",
+  "  \u2588 \u2588\u2588\u2588 \u2588 \u2580\u2588\u2580\u2580  \u2584\u2588",
+  "  \u2588\u2584\u2584\u2584\u2584\u2584\u2588 \u2588 \u2584\u2588\u2584 \u2588\u2584",
 ];
 
-const SEPARATOR = "\u2500".repeat(48);
+const SEPARATOR = "\u2500".repeat(40);
 
-function buildPhases(): Phase[] {
+function buildOutputLines(agent: string): Line[] {
   return [
-    // Phase 1: Command prompt
+    { spans: [], instant: true },
     {
-      lines: [
-        {
-          spans: [
-            { text: "$ ", cls: "t-green" },
-            { text: "npx ", cls: "t-white" },
-            { text: "itwillsync", cls: "t-cyan" },
-            { text: " -- ", cls: "t-dim" },
-            { text: "claude", cls: "t-yellow" },
-          ],
-        },
-      ],
-      delayAfter: 300,
+      spans: [{ text: "Setting up itwillsync...", cls: "t-dim" }],
+      instant: true,
     },
-    // Phase 2: Loading
+    { spans: [], instant: true },
+    { spans: [{ text: SEPARATOR, cls: "t-dim" }], instant: true },
+    { spans: [], instant: true },
     {
-      lines: [
-        { spans: [], instant: true },
-        {
-          spans: [{ text: "Setting up itwillsync v1.0.3...", cls: "t-dim" }],
-          instant: true,
-        },
+      spans: [
+        { text: "  Scan this QR code on your phone to connect:", cls: "t-white" },
       ],
-      delayAfter: 700,
+      instant: true,
     },
-    // Phase 3: Output header
+    { spans: [], instant: true },
+    ...QR_ART.map((line) => ({
+      spans: [{ text: line, cls: "t-white" }],
+      instant: true,
+    })),
+    { spans: [], instant: true },
     {
-      lines: [
-        { spans: [], instant: true },
-        { spans: [{ text: SEPARATOR, cls: "t-dim" }], instant: true },
-        { spans: [], instant: true },
-        {
-          spans: [
-            {
-              text: "  Scan this QR code on your phone to connect:",
-              cls: "t-white",
-            },
-          ],
-          instant: true,
-        },
-        { spans: [], instant: true },
+      spans: [
+        { text: "  http://192.168.1.42:3456", cls: "t-cyan" },
+        { text: "?token=a1b2c3d4e5...", cls: "t-dim" },
       ],
-      delayAfter: 400,
+      instant: true,
     },
-    // Phase 4: QR code
+    { spans: [], instant: true },
+    { spans: [{ text: SEPARATOR, cls: "t-dim" }], instant: true },
+    { spans: [], instant: true },
     {
-      lines: QR_ART.map((line) => ({
-        spans: [{ text: line, cls: "t-white" }],
-        instant: true,
-      })),
-      delayAfter: 200,
+      spans: [{ text: "  Server listening on 0.0.0.0:3456", cls: "t-muted" }],
+      instant: true,
     },
-    // Phase 5: Server info
     {
-      lines: [
-        { spans: [], instant: true },
-        {
-          spans: [
-            { text: "  http://192.168.1.42:3456", cls: "t-cyan" },
-            { text: "?token=a1b2c3d4e5...", cls: "t-dim" },
-          ],
-          instant: true,
-        },
-        { spans: [], instant: true },
-        { spans: [{ text: SEPARATOR, cls: "t-dim" }], instant: true },
-        { spans: [], instant: true },
-        {
-          spans: [
-            { text: "  Server listening on 0.0.0.0:3456", cls: "t-muted" },
-          ],
-          instant: true,
-        },
-        {
-          spans: [{ text: "  Running: claude", cls: "t-muted" }],
-          instant: true,
-        },
-        {
-          spans: [{ text: "  PID: 48291", cls: "t-muted" }],
-          instant: true,
-        },
-        {
-          spans: [{ text: "  Sleep prevention: active", cls: "t-muted" }],
-          instant: true,
-        },
-      ],
-      delayAfter: HOLD_DURATION,
+      spans: [{ text: `  Running: ${agent}`, cls: "t-muted" }],
+      instant: true,
+    },
+    {
+      spans: [{ text: "  PID: 48291", cls: "t-muted" }],
+      instant: true,
+    },
+    {
+      spans: [{ text: "  Sleep prevention: active", cls: "t-muted" }],
+      instant: true,
     },
   ];
 }
@@ -144,14 +90,13 @@ function createSpanEl(text: string, cls: string): HTMLSpanElement {
 export class TerminalAnimation {
   private el: HTMLPreElement;
   private container: HTMLElement;
-  private phases: Phase[];
   private running = false;
   private abortController: AbortController | null = null;
+  private agentIndex = 0;
 
   constructor(outputEl: HTMLPreElement, containerEl: HTMLElement) {
     this.el = outputEl;
     this.container = containerEl;
-    this.phases = buildPhases();
   }
 
   start(): void {
@@ -173,8 +118,11 @@ export class TerminalAnimation {
       this.abortController = new AbortController();
       const signal = this.abortController.signal;
 
+      const agent = AGENTS[this.agentIndex % AGENTS.length];
+      this.agentIndex++;
+
       try {
-        // Clear output using safe DOM method
+        // Clear output
         while (this.el.firstChild) {
           this.el.removeChild(this.el.firstChild);
         }
@@ -183,36 +131,39 @@ export class TerminalAnimation {
 
         await this.sleep(INITIAL_DELAY, signal);
 
-        for (const phase of this.phases) {
-          await this.renderPhase(phase, signal);
+        // Phase 1: Type the command
+        const commandSpans: Span[] = [
+          { text: "$ ", cls: "t-green" },
+          { text: "npx ", cls: "t-white" },
+          { text: "itwillsync", cls: "t-cyan" },
+          { text: " -- ", cls: "t-dim" },
+          { text: agent, cls: "t-yellow" },
+        ];
+        await this.typeLineCharByChar(commandSpans, signal);
+        await this.sleep(300, signal);
+
+        // Phase 2: Show everything else instantly
+        const outputLines = buildOutputLines(agent);
+        for (const line of outputLines) {
+          this.appendInstantLine(line.spans);
         }
+        this.scrollToBottom();
+
+        // Hold
+        await this.sleep(HOLD_DURATION, signal);
 
         // Fade out
         this.container.classList.add("fading");
         this.container.classList.remove("visible");
         await this.sleep(FADE_DURATION, signal);
       } catch {
-        // Aborted — exit loop if not running
         if (!this.running) return;
       }
     }
   }
 
-  private async renderPhase(phase: Phase, signal: AbortSignal): Promise<void> {
-    for (const line of phase.lines) {
-      if (line.instant) {
-        this.appendInstantLine(line.spans);
-        await this.sleep(LINE_DELAY, signal);
-      } else {
-        await this.typeLineCharByChar(line, signal);
-      }
-    }
-
-    await this.sleep(phase.delayAfter, signal);
-  }
-
   private async typeLineCharByChar(
-    line: Line,
+    spans: Span[],
     signal: AbortSignal
   ): Promise<void> {
     const lineEl = document.createElement("div");
@@ -222,7 +173,7 @@ export class TerminalAnimation {
     cursorEl.className = "cursor typing";
     lineEl.appendChild(cursorEl);
 
-    for (const span of line.spans) {
+    for (const span of spans) {
       for (const char of span.text) {
         const charSpan = createSpanEl(char, span.cls);
         lineEl.insertBefore(charSpan, cursorEl);
@@ -239,14 +190,17 @@ export class TerminalAnimation {
   private appendInstantLine(spans: Span[]): void {
     const div = document.createElement("div");
     if (spans.length === 0) {
-      // Empty line
-      div.textContent = "\u00A0"; // non-breaking space
+      div.textContent = "\u00A0";
     } else {
       for (const span of spans) {
         div.appendChild(createSpanEl(span.text, span.cls));
       }
     }
     this.el.appendChild(div);
+  }
+
+  private scrollToBottom(): void {
+    this.container.scrollTop = this.container.scrollHeight;
   }
 
   private sleep(ms: number, signal: AbortSignal): Promise<void> {

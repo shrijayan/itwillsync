@@ -80,6 +80,24 @@ function initVideoEmbed(): void {
   });
 }
 
+function initVersionBadge(): void {
+  const badge = document.getElementById("version-badge");
+  if (!badge) return;
+
+  fetch("https://registry.npmjs.org/itwillsync/latest")
+    .then((res) => {
+      if (!res.ok) return;
+      return res.json();
+    })
+    .then((data) => {
+      if (!data || typeof data.version !== "string") return;
+      badge.textContent = `v${data.version}`;
+    })
+    .catch(() => {
+      // Keep whatever is in the HTML as fallback
+    });
+}
+
 function initStarCount(): void {
   const countEl = document.getElementById("star-count");
   if (!countEl) return;
@@ -106,4 +124,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initCopyButton();
   initVideoEmbed();
   initStarCount();
+  initVersionBadge();
 });
