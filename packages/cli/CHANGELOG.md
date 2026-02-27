@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/shrijayan/itwillsync/compare/v1.0.4...v1.0.5) (2026-02-27)
+
+
+### Bug Fixes
+
+* add terminal animation, video embed, and copy button functionality ([784d085](https://github.com/shrijayan/itwillsync/commit/784d085f08d7661e6b64a7a5a39d9aba359e55e9))
+
 ## [1.0.4](https://github.com/shrijayan/itwillsync/compare/v1.0.3...v1.0.4) (2026-02-26)
 
 
