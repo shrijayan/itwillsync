@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="Sync any terminal-based coding agent to your phone over local network. Open source, agent-agnostic, zero cloud.">
+
+  <meta property="og:title" content="itwillsync">
+  <meta property="og:description" content="Sync any terminal-based coding agent to your phone over local network. Open source, agent-agnostic, zero cloud.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://shrijayan.github.io/itwillsync/">
+
+  <title>itwillsync — Sync your coding agent to your phone</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">itwillsync</a>
+      <div class="nav-links">
+        <a href="https://github.com/shrijayan/itwillsync" class="nav-link" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/itwillsync" class="nav-link nav-link--npm" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/shrijayan/itwillsync" class="nav-btn" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+          </svg>
+          Star
+          <span id="star-count" class="star-count" style="display:none"></span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Background atmosphere -->
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="badge">v1.0.3</span>
+    <h1 class="hero-headline">
+      Sync your coding agent<br>
+      <span class="hero-headline--accent">to your phone.</span>
+    </h1>
+    <p class="hero-sub">
+      One command. Scan QR. Phone connects.<br>
+      Local network only. No cloud. Works with any terminal agent.
+    </p>
+    <div class="cta-row">
+      <a href="#quickstart" class="btn-primary">Get Started</a>
+      <a href="#demo" class="btn-secondary">Watch Demo</a>
+    </div>
+
+    <!-- Terminal Animation -->
+    <div class="terminal-window" id="terminal-demo">
+      <div class="terminal-titlebar">
+        <div class="terminal-dots">
+          <span class="dot dot--red"></span>
+          <span class="dot dot--yellow"></span>
+          <span class="dot dot--green"></span>
+        </div>
+        <span class="terminal-title">Terminal</span>
+        <div class="terminal-dots" style="visibility:hidden">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+      <div class="terminal-body">
+        <pre id="terminal-output"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Demo -->
+  <section class="section section--video" id="demo">
+    <h2 class="section-heading">See it in action</h2>
+    <p class="section-sub">From install to connected in under 30 seconds.</p>
+    <div class="video-container">
+      <div class="video-wrapper">
+        <div id="video-placeholder" class="video-placeholder">
+          <div class="play-button">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </div>
+          <span class="video-hint">Click to play</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <h2 class="section-heading">How it works</h2>
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">One command, zero install</h3>
+        <p class="feature-desc"><code>npx itwillsync -- claude</code> and you're running. No global install, no config files.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="8" height="8" rx="1"/>
+            <rect x="14" y="2" width="8" height="8" rx="1"/>
+            <rect x="2" y="14" width="8" height="8" rx="1"/>
+            <rect x="14" y="14" width="4" height="4" rx="1"/>
+            <rect x="18" y="18" width="4" height="4" rx="1"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">QR code connect</h3>
+        <p class="feature-desc">A QR code appears in your terminal. Scan it on your phone. Connected.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 8 3 12 7 16"/>
+            <polyline points="17 8 21 12 17 16"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Full bidirectional terminal</h3>
+        <p class="feature-desc">Not just a viewer. Type on your phone, see it on your laptop. Control your agent from anywhere.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Local network only</h3>
+        <p class="feature-desc">All data stays on your WiFi. No cloud relay, no account, no telemetry. 64-char auth token per session.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <rect x="6" y="21" width="12" height="0" rx="0"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <rect x="8" y="7" width="3" height="6" rx="0.5"/>
+            <rect x="13" y="9" width="3" height="4" rx="0.5"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Multi-device access</h3>
+        <p class="feature-desc">Connect from phone, tablet, and laptop simultaneously. All see the same terminal session.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+          </svg>
+        </div>
+        <h3 class="feature-title">Auto-reconnect</h3>
+        <p class="feature-desc">WiFi dropped? Phone locked? Reconnects automatically and catches up with recent output.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section class="section" id="quickstart">
+    <h2 class="section-heading">Quick start</h2>
+    <div class="code-block-wrapper">
+      <div class="code-block">
+        <button class="copy-btn" id="copy-btn" type="button" aria-label="Copy command">Copy</button>
+        <pre><code><span class="code-comment"># Run directly (no install needed)</span>
+<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">claude</span>
+
+<span class="code-comment"># Or with any agent</span>
+<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">aider</span>
+<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">bash</span></code></pre>
+      </div>
+      <p class="code-note">Requires Node.js 20+. Works on macOS, Linux, and Windows.</p>
+    </div>
+  </section>
+
+  <!-- Supported Agents -->
+  <section class="section section--agents">
+    <p class="agents-label">Works with</p>
+    <div class="agents-row">
+      <span class="agent-tag">Claude Code</span>
+      <span class="agent-tag">Aider</span>
+      <span class="agent-tag">Goose</span>
+      <span class="agent-tag">Codex</span>
+      <span class="agent-tag">Any CLI</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-copyright">MIT License. Built by Shrijayan Rajendran.</span>
+      <div class="footer-links">
+        <a href="https://github.com/shrijayan/itwillsync" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/package/itwillsync" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/shrijayan/itwillsync/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

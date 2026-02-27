@@ -43,6 +43,15 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/landing:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.1(@types/node@25.3.2)
+
   packages/web-client:
     dependencies:
       '@xterm/addon-fit':

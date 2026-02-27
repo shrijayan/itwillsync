@@ -1,5 +1,7 @@
 # itwillsync
 
+**[Website](https://shrijayan.github.io/itwillsync/)** | **[npm](https://www.npmjs.com/package/itwillsync)** | **[Demo Video](https://youtu.be/Zc0Tb98CXh0)**
+
 Sync any terminal-based coding agent to your phone over local network. Open source, agent-agnostic, zero cloud.
 
 ```
