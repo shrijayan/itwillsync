@@ -1,8 +1,10 @@
 import { PtyManager, getDefaultShell } from "./pty-manager.js";
 import { generateToken } from "./auth.js";
-import { getLocalIP, findAvailablePort } from "./network.js";
+import { findAvailablePort, resolveSessionIP } from "./network.js";
 import { createSyncServer } from "./server.js";
 import { displayQR } from "./qr.js";
+import { configExists, loadConfig, type NetworkingMode } from "./config.js";
+import { runSetupWizard } from "./wizard.js";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -38,22 +40,35 @@ function preventSleep(): ChildProcess | null {
 
 const DEFAULT_PORT = 3456;
 
-interface CliOptions {
+export interface CliOptions {
   port: number;
   localhost: boolean;
   noQr: boolean;
   command: string[];
+  subcommand: "setup" | null;
+  tailscale: boolean;
+  local: boolean;
 }
 
-function parseArgs(argv: string[]): CliOptions {
+export function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     port: DEFAULT_PORT,
     localhost: false,
     noQr: false,
     command: [],
+    subcommand: null,
+    tailscale: false,
+    local: false,
   };
 
   const args = argv.slice(2);
+
+  // Check for subcommand first
+  if (args.length > 0 && args[0] === "setup") {
+    options.subcommand = "setup";
+    return options;
+  }
+
   let i = 0;
 
   while (i < args.length) {
@@ -68,6 +83,12 @@ function parseArgs(argv: string[]): CliOptions {
       i += 2;
     } else if (arg === "--localhost") {
       options.localhost = true;
+      i++;
+    } else if (arg === "--tailscale") {
+      options.tailscale = true;
+      i++;
+    } else if (arg === "--local") {
+      options.local = true;
       i++;
     } else if (arg === "--no-qr") {
       options.noQr = true;
@@ -95,29 +116,65 @@ itwillsync — Sync any terminal agent to your phone
 Usage:
   itwillsync [options] -- <command> [args...]
   itwillsync [options] <command> [args...]
+  itwillsync setup
 
 Examples:
   itwillsync -- claude
   itwillsync -- aider --model gpt-4
   itwillsync bash
   itwillsync --port 8080 -- claude
+  itwillsync --tailscale -- claude
+  itwillsync setup
+
+Commands:
+  setup              Run the setup wizard (configure networking mode)
 
 Options:
-  --port <number>   Port to listen on (default: ${DEFAULT_PORT})
-  --localhost        Bind to 127.0.0.1 only (no LAN access)
-  --no-qr           Don't display QR code
-  -h, --help        Show this help
-  -v, --version     Show version
+  --port <number>    Port to listen on (default: ${DEFAULT_PORT})
+  --localhost         Bind to 127.0.0.1 only (no LAN access)
+  --tailscale         Use Tailscale IP for this session
+  --local             Use local network IP for this session
+  --no-qr            Don't display QR code
+  -h, --help         Show this help
+  -v, --version      Show version
 `);
 }
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv);
 
+  // Handle setup subcommand
+  if (options.subcommand === "setup") {
+    await runSetupWizard();
+    return;
+  }
+
+  // Validate conflicting flags
+  if (options.tailscale && options.local) {
+    console.error("Error: Cannot use both --tailscale and --local.\n");
+    process.exit(1);
+  }
+
+  // First-run: trigger wizard if no config exists and no override flags
+  if (!configExists() && !options.tailscale && !options.local && process.stdin.isTTY) {
+    await runSetupWizard();
+  }
+
   if (options.command.length === 0) {
     console.error("Error: No command specified.\n");
     printHelp();
     process.exit(1);
+  }
+
+  // Determine networking mode: CLI flag > saved config > default
+  let networkingMode: NetworkingMode = "local";
+  if (options.tailscale) {
+    networkingMode = "tailscale";
+  } else if (options.local) {
+    networkingMode = "local";
+  } else {
+    const config = loadConfig();
+    networkingMode = config.networkingMode;
   }
 
   // Parse command and arguments
@@ -130,8 +187,8 @@ async function main(): Promise<void> {
   const port = await findAvailablePort(options.port);
   const host = options.localhost ? "127.0.0.1" : "0.0.0.0";
 
-  // Determine local IP for the connection URL
-  const ip = options.localhost ? "127.0.0.1" : getLocalIP();
+  // Determine IP for the connection URL
+  const ip = await resolveSessionIP(networkingMode, options.localhost);
   const url = `http://${ip}:${port}?token=${token}`;
 
   // Resolve path to the built web client
