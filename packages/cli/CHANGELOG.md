@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/shrijayan/itwillsync/compare/v1.1.0...v1.2.0) (2026-02-28)
+
+
+### Features
+
+* implement notification system with audio for agent attention ([f5d1838](https://github.com/shrijayan/itwillsync/commit/f5d1838eea625cad16176d927d7d53737aaaab47))
+
 # [1.1.0](https://github.com/shrijayan/itwillsync/compare/v1.0.6...v1.1.0) (2026-02-28)
 
 
