@@ -3,6 +3,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import "@xterm/xterm/css/xterm.css";
 import { createExtraKeys, applyModifiers, hasActiveModifier } from "./extra-keys";
+import { initNotifications, unlockAudio, showNotification, recordUserActivity } from "./notifications";
 
 // --- DOM Elements ---
 const terminalContainer = document.getElementById("terminal-container")!;
@@ -65,6 +66,33 @@ try {
 }
 
 fitAddon.fit();
+
+// --- Agent Attention Detection ---
+// All handlers fire immediately. OSC 9 progress bars (data starting with "4;") are filtered out.
+
+// 1. Standalone BEL (\x07)
+terminal.onBell(() => {
+  showNotification("Agent needs your attention");
+});
+
+// 2. OSC 9 (iTerm2) — skip progress bar updates (9;4;state;progress)
+terminal.parser.registerOscHandler(9, (data) => {
+  if (data.startsWith("4;")) return true; // progress bar, ignore
+  showNotification("Agent needs your attention");
+  return true;
+});
+
+// 3. Kitty (OSC 99)
+terminal.parser.registerOscHandler(99, () => {
+  showNotification("Agent needs your attention");
+  return true;
+});
+
+// 4. Ghostty (OSC 777)
+terminal.parser.registerOscHandler(777, () => {
+  showNotification("Agent needs your attention");
+  return true;
+});
 
 // --- WebSocket Connection ---
 let ws: WebSocket | null = null;
@@ -170,6 +198,7 @@ terminal.onData((data: string) => {
   // If CTRL or ALT is armed, apply modifier to the soft keyboard input
   const modified = hasActiveModifier() ? applyModifiers(data) : data;
   sendInput(modified);
+  recordUserActivity();
 });
 
 // --- Extra Keys Toolbar ---
@@ -218,7 +247,17 @@ terminalContainer.addEventListener("touchstart", () => {
   terminal.focus();
 });
 
+// --- Unlock audio on ANY user gesture (mobile browsers require this) ---
+// Some browsers need 'click' not just 'touchstart', so we listen on both
+document.addEventListener("click", () => unlockAudio(), { once: true });
+document.addEventListener("touchstart", () => unlockAudio(), { once: true });
+
 // --- Start ---
 (window as any).__itwillsync_loaded = true;
+initNotifications({
+  statusBar: document.getElementById("status-bar")!,
+  statusDot,
+  statusText,
+});
 terminal.focus();
 connect();

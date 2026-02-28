@@ -200,6 +200,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
         client.send(data);
       }
     }
+
   });
 
   // Start listening
