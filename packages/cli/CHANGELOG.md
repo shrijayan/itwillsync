@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/shrijayan/itwillsync/compare/v1.0.6...v1.1.0) (2026-02-28)
+
+
+### Features
+
+* add configuration management and setup wizard for networking modes ([1645720](https://github.com/shrijayan/itwillsync/commit/1645720c9f6f0955a991cf406ded698af621996d))
+* **cli:** add Tailscale status retrieval and CLI options parsing ([7606866](https://github.com/shrijayan/itwillsync/commit/7606866f0ee5f979e4494307f7cc8a3bf3515c18))
+
 ## [1.0.6](https://github.com/shrijayan/itwillsync/compare/v1.0.5...v1.0.6) (2026-02-27)
 
 
