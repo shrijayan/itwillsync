@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm --filter @itwillsync/web-client build && pnpm --filter itwillsync build",
+    "test": "pnpm --filter itwillsync test",
     "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r clean"
   },
