@@ -12,21 +12,21 @@ const DEFAULT_CONFIG: Config = {
   networkingMode: "local",
 };
 
-const CONFIG_DIR =
-  process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-const CONFIG_PATH = join(CONFIG_DIR, "config.json");
+function getConfigDir(): string {
+  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
+}
 
 export function getConfigPath(): string {
-  return CONFIG_PATH;
+  return join(getConfigDir(), "config.json");
 }
 
 export function configExists(): boolean {
-  return existsSync(CONFIG_PATH);
+  return existsSync(getConfigPath());
 }
 
 export function loadConfig(): Config {
   try {
-    const raw = readFileSync(CONFIG_PATH, "utf-8");
+    const raw = readFileSync(getConfigPath(), "utf-8");
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_CONFIG, ...parsed };
   } catch {
@@ -35,6 +35,11 @@ export function loadConfig(): Config {
 }
 
 export function saveConfig(config: Config): void {
-  mkdirSync(CONFIG_DIR, { recursive: true });
-  writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2) + "\n", "utf-8");
+  const dir = getConfigDir();
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, "config.json"),
+    JSON.stringify(config, null, 2) + "\n",
+    "utf-8"
+  );
 }

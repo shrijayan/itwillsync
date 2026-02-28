@@ -12,6 +12,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "clean": "rm -rf dist"
   },
   "keywords": [
@@ -39,14 +41,16 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@clack/prompts": "^1.0.1",
     "node-pty": "^1.0.0",
-    "ws": "^8.18.0",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode-terminal": "^0.12.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.2",
     "@types/ws": "^8.5.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }
