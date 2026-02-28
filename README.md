@@ -2,7 +2,7 @@
 
 **[Website](https://shrijayan.github.io/itwillsync/)** | **[npm](https://www.npmjs.com/package/itwillsync)** | **[Demo Video](https://youtu.be/Zc0Tb98CXh0)**
 
-Sync any terminal-based coding agent to your phone over local network. Open source, agent-agnostic, zero cloud.
+Sync any terminal-based coding agent to your phone. Local network or Tailscale. Open source, agent-agnostic, zero cloud.
 
 ```
 npx itwillsync -- claude
@@ -16,8 +16,6 @@ npx itwillsync -- bash
 2. A QR code appears in your terminal
 3. Scan it on your phone — opens a terminal in your browser
 4. Control your agent from your phone (or both phone and laptop simultaneously)
-
-All data stays on your local network. No cloud, no relay, no account needed.
 
 ## Requirements
 
@@ -35,94 +33,58 @@ npm install -g itwillsync
 itwillsync -- aider --model gpt-4
 ```
 
+On first run, a setup wizard asks how you want to connect — local WiFi or Tailscale. Your choice is saved for future sessions.
+
+## Connect from Anywhere with Tailscale
+
+By default, your phone needs to be on the same WiFi. With [Tailscale](https://tailscale.com), you can connect from anywhere — coffee shop, cellular, different network.
+
+```bash
+# First time: the setup wizard will detect Tailscale automatically
+itwillsync -- claude
+
+# Or use Tailscale for a single session
+itwillsync --tailscale -- claude
+
+# Switch back to local WiFi for a session
+itwillsync --local -- claude
+
+# Re-run setup anytime
+itwillsync setup
+```
+
+**Setup:** Install Tailscale on both your computer and phone. That's it — itwillsync detects it automatically.
+
 ## Options
 
 ```
---port <number>   Port to listen on (default: 3456)
---localhost        Bind to 127.0.0.1 only (no LAN access)
---no-qr           Don't display QR code
--h, --help        Show help
--v, --version     Show version
+Commands:
+  setup              Run the setup wizard (change networking mode)
+
+Options:
+  --port <number>    Port to listen on (default: 3456)
+  --localhost         Bind to 127.0.0.1 only (no LAN access)
+  --tailscale         Use Tailscale for this session
+  --local             Use local WiFi for this session
+  --no-qr            Don't display QR code
+  -h, --help         Show help
+  -v, --version      Show version
 ```
-
-## Remote Access
-
-By default, itwillsync is accessible on your local network (same WiFi). For remote access from anywhere:
-
-- **Tailscale** (recommended): Install on both devices, access via Tailscale IP
-- **WireGuard / VPN**: Any VPN that puts devices on the same network
-- **SSH tunnel**: `ssh -L 3456:localhost:3456 your-machine`
 
 ## Security
 
 - Each session generates a random 64-character token
 - Token is embedded in the QR code URL
 - All WebSocket connections require the token
-- No data leaves your network
+- No data leaves your network (local mode) or your Tailscale tailnet
 
-## Architecture
+## Works with
 
-```
-Your Machine                          Your Phone
-┌─────────────────────┐              ┌──────────────┐
-│ itwillsync          │   WiFi/LAN   │  Browser     │
-│ ├─ PTY (your agent) │◄────────────►│  xterm.js    │
-│ ├─ HTTP server      │  WebSocket   │  terminal    │
-│ └─ WS server        │              └──────────────┘
-└─────────────────────┘
-```
-
-## Session Behavior
-
-- **No timeout**: Sessions live as long as the agent process runs. No TTL, no idle disconnect.
-- **Multiple devices**: Connect from phone, tablet, and laptop simultaneously — all see the same terminal.
-- **Reconnect**: If your phone disconnects (WiFi switch, screen lock), it auto-reconnects and catches up with recent output.
-- **Keepalive**: WebSocket pings every 30s prevent routers from closing idle connections.
-- **One session per instance**: Run multiple `itwillsync` instances on different ports for multiple agents.
+Claude Code, Aider, Goose, Codex, Cline, Copilot CLI, or any terminal-based tool.
 
 ## Development
 
-```bash
-# 1. Clone and enter the project
-git clone https://github.com/your-username/itwillsync
-cd itwillsync
-
-# 2. Use Node 22 (required for node-pty native bindings)
-nvm use  # reads .nvmrc
-
-# 3. Install dependencies
-pnpm install
-
-# 4. Build everything (web client first, then CLI)
-pnpm build
-
-# 5. Test it
-node packages/cli/dist/index.js -- bash
-```
-
-### Project Structure
-
-```
-packages/
-├── cli/           # Main npm package — PTY, server, auth, CLI
-└── web-client/    # Browser terminal — xterm.js, mobile-friendly CSS
-```
-
-### Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes
-4. Run `pnpm build` to verify
-5. Open a PR
-
-## Roadmap
-
-- [ ] Chat-style input bar + quick action buttons on mobile
-- [ ] Agent detection + structured view for Claude Code
-- [ ] React Native mobile app
-- [ ] VS Code extension adapter
-- [ ] Agent Sync Protocol specification
+See [docs/development.md](docs/development.md) for architecture, project structure, and contributing guide.
 
 ## License
 
