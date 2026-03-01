@@ -96,8 +96,10 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
 
-  // Scrollback buffer: stores recent PTY output so reconnecting clients can catch up
+  // Scrollback buffer: stores recent PTY output so reconnecting clients can catch up.
+  // `seq` is a running character count — clients track it to request delta sync on reconnect.
   let scrollbackBuffer = "";
+  let seq = 0;
 
   // --- HTTP Server ---
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
@@ -151,9 +153,11 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     clients.add(ws);
     aliveMap.set(ws, true);
 
-    // Send buffered scrollback so reconnecting clients see recent output
+    // Send buffered scrollback so reconnecting clients see recent output.
+    // This is the full-buffer path for initial connections. Clients that send
+    // a "resume" message with lastSeq will get delta sync instead.
     if (scrollbackBuffer.length > 0) {
-      ws.send(scrollbackBuffer);
+      ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
     }
 
     ws.on("pong", () => {
@@ -172,6 +176,15 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
           typeof message.rows === "number"
         ) {
           ptyManager.resize(message.cols, message.rows);
+        } else if (message.type === "resume" && typeof message.lastSeq === "number") {
+          // Delta sync: send only the data the client missed since lastSeq
+          const missed = seq - message.lastSeq;
+          if (missed > 0 && scrollbackBuffer.length > 0) {
+            const delta = missed <= scrollbackBuffer.length
+              ? scrollbackBuffer.slice(-missed)
+              : scrollbackBuffer;
+            ws.send(JSON.stringify({ type: "data", data: delta, seq }));
+          }
         }
       } catch {
         // Malformed message; ignore silently
@@ -190,17 +203,18 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
   // Forward PTY output to all connected WebSocket clients
   ptyManager.onData((data: string) => {
     // Buffer output for reconnecting clients
+    seq += data.length;
     scrollbackBuffer += data;
     if (scrollbackBuffer.length > SCROLLBACK_BUFFER_SIZE) {
       scrollbackBuffer = scrollbackBuffer.slice(-SCROLLBACK_BUFFER_SIZE);
     }
 
+    const msg = JSON.stringify({ type: "data", data, seq });
     for (const client of clients) {
       if (client.readyState === client.OPEN) {
-        client.send(data);
+        client.send(msg);
       }
     }
-
   });
 
   // Start listening
