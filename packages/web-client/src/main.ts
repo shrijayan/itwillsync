@@ -4,6 +4,7 @@ import { WebglAddon } from "@xterm/addon-webgl";
 import "@xterm/xterm/css/xterm.css";
 import { createExtraKeys, applyModifiers, hasActiveModifier } from "./extra-keys";
 import { initNotifications, unlockAudio, showNotification, recordUserActivity } from "./notifications";
+import { ConnectionManager, type ConnectionState } from "./reconnect";
 
 // --- DOM Elements ---
 const terminalContainer = document.getElementById("terminal-container")!;
@@ -95,10 +96,8 @@ terminal.parser.registerOscHandler(777, () => {
 });
 
 // --- WebSocket Connection ---
-let ws: WebSocket | null = null;
-let reconnectAttempts = 0;
 let reconnectOverlay: HTMLElement | null = null;
-const MAX_RECONNECT_DELAY = 10000;
+let lastSeq = -1;
 
 function getWsUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -120,15 +119,15 @@ function createReconnectOverlay(): HTMLElement {
   return overlay;
 }
 
-function setStatus(state: "connected" | "disconnected" | "reconnecting"): void {
+function setStatus(state: ConnectionState, attempts: number): void {
   statusDot.className = state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "";
   statusText.textContent =
     state === "connected"
       ? "Connected"
       : state === "reconnecting"
-        ? reconnectAttempts > 5
+        ? attempts > 5
           ? "Waiting for laptop to wake up..."
-          : `Reconnecting (attempt ${reconnectAttempts})...`
+          : `Reconnecting (attempt ${attempts})...`
         : "Disconnected";
 
   // Manage reconnect overlay
@@ -141,56 +140,49 @@ function setStatus(state: "connected" | "disconnected" | "reconnecting"): void {
   }
 }
 
-function connect(): void {
-  ws = new WebSocket(getWsUrl());
-
-  ws.onopen = () => {
-    reconnectAttempts = 0;
-    setStatus("connected");
-
-    // Send initial terminal size
+const connection = new ConnectionManager({
+  getUrl: getWsUrl,
+  onOpen: () => {
+    // Request delta sync if we have a previous sequence number
+    if (lastSeq >= 0) {
+      connection.send(JSON.stringify({ type: "resume", lastSeq }));
+    }
     sendResize();
-  };
-
-  ws.onmessage = (event) => {
-    // Server sends raw terminal data
-    terminal.write(typeof event.data === "string" ? event.data : new Uint8Array(event.data as ArrayBuffer));
-  };
-
-  ws.onclose = () => {
-    setStatus("reconnecting");
-    scheduleReconnect();
-  };
-
-  ws.onerror = () => {
-    // onclose will fire after onerror, so reconnect is handled there
-  };
-}
-
-function scheduleReconnect(): void {
-  reconnectAttempts++;
-  const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
-  setTimeout(connect, delay);
-}
+  },
+  onMessage: (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case "data":
+          terminal.write(msg.data);
+          if (typeof msg.seq === "number") {
+            lastSeq = msg.seq;
+          }
+          break;
+        // Future message types (notifications, permissions, etc.) go here
+      }
+    } catch {
+      // Raw string fallback (backward compat with older servers)
+      terminal.write(typeof event.data === "string" ? event.data : new Uint8Array(event.data as ArrayBuffer));
+    }
+  },
+  onStatusChange: setStatus,
+});
 
 function sendResize(): void {
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: "resize",
-      cols: terminal.cols,
-      rows: terminal.rows,
-    }));
-  }
+  connection.send(JSON.stringify({
+    type: "resize",
+    cols: terminal.cols,
+    rows: terminal.rows,
+  }));
 }
 
 // --- Send input to server ---
 function sendInput(data: string): void {
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: "input",
-      data,
-    }));
-  }
+  connection.send(JSON.stringify({
+    type: "input",
+    data,
+  }));
 }
 
 // --- Terminal Input → WebSocket (with modifier intercept) ---
@@ -260,4 +252,4 @@ initNotifications({
   statusText,
 });
 terminal.focus();
-connect();
+connection.connect();
