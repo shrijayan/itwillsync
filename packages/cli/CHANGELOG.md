@@ -1,3 +1,13 @@
+# [1.3.0](https://github.com/shrijayan/itwillsync/compare/v1.2.1...v1.3.0) (2026-03-01)
+
+
+### Features
+
+* add internal API server for session management ([e8eecf8](https://github.com/shrijayan/itwillsync/commit/e8eecf8445c997dca680e81fe1bcc43b20a13321))
+* enhance health check logic to consider recent heartbeats for session status ([07a38df](https://github.com/shrijayan/itwillsync/commit/07a38df9d83e87638bd3857127a9d9574eb1ec41))
+* hide status badge for sessions in attention state ([bf409a9](https://github.com/shrijayan/itwillsync/commit/bf409a92a4361afb1b425d7b0025af58e6b121d1))
+* implement audio notifications and attention management for sessions ([65c9689](https://github.com/shrijayan/itwillsync/commit/65c968970d75d2555233e45fe2902d57bcdac050))
+
 ## [1.2.1](https://github.com/shrijayan/itwillsync/compare/v1.2.0...v1.2.1) (2026-03-01)
 
 
