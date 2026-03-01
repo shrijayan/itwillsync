@@ -223,6 +223,7 @@ async function main(): Promise<void> {
     webClientPath,
     host,
     port,
+    localTerminalOwnsResize: true,
   });
 
   // Register with hub
@@ -303,6 +304,7 @@ async function main(): Promise<void> {
   function handleResize(): void {
     if (process.stdout.columns && process.stdout.rows) {
       ptyManager.resize(process.stdout.columns, process.stdout.rows);
+      server.broadcastResize(process.stdout.columns, process.stdout.rows);
     }
   }
 

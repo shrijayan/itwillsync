@@ -58,6 +58,11 @@ function ensureSpawnHelperPermissions(): void {
 
 export class PtyManager {
   private ptyProcess: pty.IPty;
+  private _cols: number = 80;
+  private _rows: number = 24;
+
+  get cols(): number { return this._cols; }
+  get rows(): number { return this._rows; }
 
   /** The process ID of the spawned PTY process. */
   readonly pid: number;
@@ -109,6 +114,8 @@ export class PtyManager {
   resize(cols: number, rows: number): void {
     try {
       this.ptyProcess.resize(cols, rows);
+      this._cols = cols;
+      this._rows = rows;
     } catch {
       // Process may have already exited; ignore resize errors
     }

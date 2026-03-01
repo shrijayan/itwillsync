@@ -103,6 +103,7 @@ html, body {
 #terminal-container {
   height: calc(100% - 32px - var(--extra-keys-height, 0px));
   width: 100%;
+  overflow: hidden; /* horizontal panning controlled by JS */
 }
 
 /* xterm.js overrides for mobile */
