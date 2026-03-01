@@ -18,9 +18,15 @@ export default defineConfig({
   noExternal: ["ws"],
   onSuccess: async () => {
     // Copy built web client into CLI dist
-    const src = resolve("../web-client/dist");
-    const dest = resolve("dist/web-client");
-    cpSync(src, dest, { recursive: true });
+    const webClientSrc = resolve("../web-client/dist");
+    const webClientDest = resolve("dist/web-client");
+    cpSync(webClientSrc, webClientDest, { recursive: true });
     console.log("Copied web-client dist → dist/web-client");
+
+    // Copy built hub daemon + dashboard into CLI dist
+    const hubSrc = resolve("../hub/dist");
+    const hubDest = resolve("dist/hub");
+    cpSync(hubSrc, hubDest, { recursive: true });
+    console.log("Copied hub dist → dist/hub");
   },
 });

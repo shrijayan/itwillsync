@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs } from "../cli-options.js";
+import { parseArgs, DEFAULT_PORT } from "../cli-options.js";
 
 // Helper: simulate argv as if node ran `itwillsync <...args>`
 function argv(...args: string[]): string[] {
@@ -9,7 +9,7 @@ function argv(...args: string[]): string[] {
 describe("parseArgs", () => {
   it("returns defaults when no args provided", () => {
     const opts = parseArgs(argv());
-    expect(opts.port).toBe(3456);
+    expect(opts.port).toBe(DEFAULT_PORT);
     expect(opts.localhost).toBe(false);
     expect(opts.noQr).toBe(false);
     expect(opts.command).toEqual([]);
@@ -27,7 +27,7 @@ describe("parseArgs", () => {
     const opts = parseArgs(argv("setup", "--tailscale", "--port", "9999"));
     expect(opts.subcommand).toBe("setup");
     expect(opts.tailscale).toBe(false);
-    expect(opts.port).toBe(3456);
+    expect(opts.port).toBe(DEFAULT_PORT);
   });
 
   it("parses --tailscale flag", () => {
@@ -81,5 +81,28 @@ describe("parseArgs", () => {
     expect(opts.noQr).toBe(true);
     expect(opts.port).toBe(9000);
     expect(opts.command).toEqual(["claude"]);
+  });
+
+  it("parses --hub-info flag", () => {
+    const opts = parseArgs(argv("--hub-info"));
+    expect(opts.hubInfo).toBe(true);
+    expect(opts.command).toEqual([]);
+  });
+
+  it("parses --hub-stop flag", () => {
+    const opts = parseArgs(argv("--hub-stop"));
+    expect(opts.hubStop).toBe(true);
+  });
+
+  it("parses --hub-status flag", () => {
+    const opts = parseArgs(argv("--hub-status"));
+    expect(opts.hubStatus).toBe(true);
+  });
+
+  it("defaults hub flags to false", () => {
+    const opts = parseArgs(argv());
+    expect(opts.hubInfo).toBe(false);
+    expect(opts.hubStop).toBe(false);
+    expect(opts.hubStatus).toBe(false);
   });
 });

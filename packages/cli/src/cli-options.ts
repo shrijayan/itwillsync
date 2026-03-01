@@ -1,4 +1,6 @@
-export const DEFAULT_PORT = 3456;
+import { SESSION_PORT_START } from "./hub-client.js";
+
+export const DEFAULT_PORT = SESSION_PORT_START;
 
 export interface CliOptions {
   port: number;
@@ -8,6 +10,9 @@ export interface CliOptions {
   subcommand: "setup" | null;
   tailscale: boolean;
   local: boolean;
+  hubInfo: boolean;
+  hubStop: boolean;
+  hubStatus: boolean;
 }
 
 export function parseArgs(argv: string[]): CliOptions {
@@ -19,13 +24,26 @@ export function parseArgs(argv: string[]): CliOptions {
     subcommand: null,
     tailscale: false,
     local: false,
+    hubInfo: false,
+    hubStop: false,
+    hubStatus: false,
   };
 
   const args = argv.slice(2);
 
-  // Check for subcommand first
+  // Check for subcommands first
   if (args.length > 0 && args[0] === "setup") {
     options.subcommand = "setup";
+    return options;
+  }
+
+  // Handle "hub" subcommand: itwillsync hub info/stop/status
+  if (args.length > 0 && args[0] === "hub") {
+    const hubAction = args[1] || "info"; // default to info
+    if (hubAction === "info") options.hubInfo = true;
+    else if (hubAction === "stop") options.hubStop = true;
+    else if (hubAction === "status") options.hubStatus = true;
+    else options.hubInfo = true; // unknown action defaults to info
     return options;
   }
 
@@ -53,6 +71,15 @@ export function parseArgs(argv: string[]): CliOptions {
     } else if (arg === "--no-qr") {
       options.noQr = true;
       i++;
+    } else if (arg === "--hub-info") {
+      options.hubInfo = true;
+      i++;
+    } else if (arg === "--hub-stop") {
+      options.hubStop = true;
+      i++;
+    } else if (arg === "--hub-status") {
+      options.hubStatus = true;
+      i++;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -77,6 +104,7 @@ Usage:
   itwillsync [options] -- <command> [args...]
   itwillsync [options] <command> [args...]
   itwillsync setup
+  itwillsync hub [info|stop|status]
 
 Examples:
   itwillsync -- claude
@@ -85,9 +113,14 @@ Examples:
   itwillsync --port 8080 -- claude
   itwillsync --tailscale -- claude
   itwillsync setup
+  itwillsync hub info
+  itwillsync hub stop
 
 Commands:
   setup              Run the setup wizard (configure networking mode)
+  hub info           Show dashboard URL, QR code, and hub status
+  hub stop           Stop the hub daemon and all sessions
+  hub status         List all active sessions
 
 Options:
   --port <number>    Port to listen on (default: ${DEFAULT_PORT})
@@ -97,5 +130,10 @@ Options:
   --no-qr            Don't display QR code
   -h, --help         Show this help
   -v, --version      Show version
+
+Hub Management:
+  --hub-info         Show dashboard URL, QR code, and hub status
+  --hub-stop         Stop the hub daemon and all sessions
+  --hub-status       List all active sessions
 `);
 }
