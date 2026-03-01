@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <title>itwillsync Dashboard</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header id="header">
+    <div class="header-left">
+      <span class="logo">itwillsync</span>
+      <span id="status-dot"></span>
+    </div>
+    <span id="session-count">0 sessions</span>
+  </header>
+
+  <main id="session-list">
+    <div id="empty-state">
+      <div class="empty-icon">&#x1F4BB;</div>
+      <p>No active sessions</p>
+      <p class="empty-hint">Start an agent with <code>itwillsync -- claude</code></p>
+    </div>
+  </main>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
