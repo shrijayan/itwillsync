@@ -6,11 +6,3 @@ dist/
 # VitePress
 **/.vitepress/cache/
 
-# Local tool configs
-.claude/
-.playwright-mcp/
-.serena/
-CLAUDE.md
-
-# Misc
-docs-page-buttons.png
