@@ -30,6 +30,32 @@ html, body {
   z-index: 10;
 }
 
+#back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px 0 8px;
+  border-radius: 12px;
+  background: rgba(233, 69, 96, 0.15);
+  color: #e94560;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+
+#back-btn:active {
+  background: rgba(233, 69, 96, 0.3);
+}
+
+#back-btn.hidden {
+  display: none;
+}
+
 #status-dot {
   width: 8px;
   height: 8px;
@@ -119,6 +145,51 @@ html, body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* "Back to Dashboard" link on the reconnecting overlay */
+.reconnect-dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: rgba(233, 69, 96, 0.15);
+  color: #e94560;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.reconnect-dashboard-btn:active {
+  background: rgba(233, 69, 96, 0.3);
+  transform: scale(0.97);
+}
+
+/* Promoted style when session has ended */
+.reconnect-dashboard-btn.primary {
+  background: #e94560;
+  color: #ffffff;
+  padding: 12px 28px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.reconnect-dashboard-btn.primary:active {
+  background: #c73a52;
+}
+
+/* "Session ended" state */
+#reconnect-overlay.ended {
+  gap: 16px;
+}
+
+#reconnect-overlay.ended .reconnect-text {
+  font-size: 18px;
+  color: #a0a0b0;
 }
 
 /* --- Extra Keys Toolbar (Termux-style) --- */

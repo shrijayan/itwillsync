@@ -46,7 +46,8 @@ function sendMessage(msg: object): void {
 
 const cardCallbacks: CardCallbacks = {
   onOpen(session: SessionData) {
-    const url = `http://${baseIP}:${session.port}?token=${session.token}`;
+    const hubUrl = window.location.href;
+    const url = `http://${baseIP}:${session.port}?token=${session.token}&hub=${encodeURIComponent(hubUrl)}`;
     window.open(url, "_blank");
   },
 

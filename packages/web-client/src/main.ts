@@ -12,13 +12,21 @@ const extraKeysContainer = document.getElementById("extra-keys")!;
 const statusDot = document.getElementById("status-dot")!;
 const statusText = document.getElementById("status-text")!;
 
-// --- Extract token from URL ---
+// --- Extract params from URL ---
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
+const hubUrl = params.get("hub");
 
 if (!token) {
   statusText.textContent = "Error: No auth token in URL";
   throw new Error("Missing token parameter");
+}
+
+// --- Back button (shown when opened from hub dashboard) ---
+const backBtn = document.getElementById("back-btn")!;
+if (hubUrl) {
+  backBtn.classList.remove("hidden");
+  (backBtn as HTMLAnchorElement).href = hubUrl;
 }
 
 // --- Terminal Setup ---
@@ -97,7 +105,11 @@ terminal.parser.registerOscHandler(777, () => {
 
 // --- WebSocket Connection ---
 let reconnectOverlay: HTMLElement | null = null;
+let endedTimer: ReturnType<typeof setTimeout> | null = null;
 let lastSeq = -1;
+
+/** How long to keep reconnecting before declaring "session ended" (ms). */
+const SESSION_ENDED_TIMEOUT = 15_000;
 
 function getWsUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -113,10 +125,40 @@ function createReconnectOverlay(): HTMLElement {
   overlay.appendChild(spinner);
 
   const text = document.createElement("div");
+  text.className = "reconnect-text";
   text.textContent = "Reconnecting...";
   overlay.appendChild(text);
 
+  // Show "Back to Dashboard" button if opened from hub
+  if (hubUrl) {
+    const link = document.createElement("a");
+    link.className = "reconnect-dashboard-btn";
+    link.href = hubUrl;
+    link.textContent = "\u2190 Back to Dashboard";
+    overlay.appendChild(link);
+  }
+
   return overlay;
+}
+
+function showSessionEnded(): void {
+  if (!reconnectOverlay) return;
+
+  // Stop reconnecting
+  connection.destroy();
+
+  // Update overlay to "ended" state
+  reconnectOverlay.classList.add("ended");
+
+  const spinner = reconnectOverlay.querySelector(".spinner");
+  if (spinner) spinner.remove();
+
+  const text = reconnectOverlay.querySelector(".reconnect-text");
+  if (text) text.textContent = "Session ended";
+
+  // Make the dashboard button more prominent
+  const btn = reconnectOverlay.querySelector(".reconnect-dashboard-btn");
+  if (btn) btn.classList.add("primary");
 }
 
 function setStatus(state: ConnectionState, attempts: number): void {
@@ -134,9 +176,19 @@ function setStatus(state: ConnectionState, attempts: number): void {
   if (state === "reconnecting" && !reconnectOverlay) {
     reconnectOverlay = createReconnectOverlay();
     document.body.appendChild(reconnectOverlay);
+
+    // Start "session ended" countdown
+    if (endedTimer) clearTimeout(endedTimer);
+    endedTimer = setTimeout(showSessionEnded, SESSION_ENDED_TIMEOUT);
   } else if (state === "connected" && reconnectOverlay) {
     reconnectOverlay.remove();
     reconnectOverlay = null;
+
+    // Cancel "session ended" countdown
+    if (endedTimer) {
+      clearTimeout(endedTimer);
+      endedTimer = null;
+    }
   }
 }
 

@@ -2,3 +2,15 @@ node_modules/
 dist/
 *.tsbuildinfo
 .DS_Store
+
+# VitePress
+**/.vitepress/cache/
+
+# Local tool configs
+.claude/
+.playwright-mcp/
+.serena/
+CLAUDE.md
+
+# Misc
+docs-page-buttons.png
