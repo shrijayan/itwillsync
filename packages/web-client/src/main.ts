@@ -103,6 +103,84 @@ terminal.parser.registerOscHandler(777, () => {
   return true;
 });
 
+// --- PTY Dimension Tracking ---
+// When the server tells us the host PTY size, we match xterm.js to it so escape
+// sequences render correctly.  Font size is reduced to fit as many columns as
+// possible, and we auto-pan horizontally to follow the cursor.
+let ptyDims: { cols: number; rows: number } | null = null;
+
+const MIN_FONT_SIZE = 12;
+const DEFAULT_FONT_SIZE = 14;
+
+/** Measure the character-width / font-size ratio for the current font family. */
+function measureCharRatio(): number {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  ctx.font = `10px ${terminal.options.fontFamily}`;
+  return ctx.measureText("W").width / 10;
+}
+
+/** Calculate optimal font size and resize terminal to match PTY dimensions. */
+function applyPtyDimensions(): void {
+  if (!ptyDims) return;
+
+  const containerWidth = terminalContainer.clientWidth;
+  // 8px = xterm padding (4px each side), 14px scrollbar when scrollback > 0
+  const padding = 8;
+  const scrollbar = terminal.options.scrollback === 0 ? 0 : 14;
+  const availableWidth = containerWidth - padding - scrollbar;
+
+  const charRatio = measureCharRatio();
+  const idealFontSize = availableWidth / (ptyDims.cols * charRatio);
+  const fontSize = Math.max(MIN_FONT_SIZE, Math.min(DEFAULT_FONT_SIZE, Math.floor(idealFontSize * 10) / 10));
+
+  terminal.options.fontSize = fontSize;
+
+  // Use fitAddon to calculate how many rows fit the available height at this font size.
+  // Cols are pinned to PTY cols for correct horizontal rendering;
+  // rows fill the phone screen so there's no black gap at the bottom.
+  const dims = fitAddon.proposeDimensions();
+  const rows = dims ? dims.rows : ptyDims.rows;
+  terminal.resize(ptyDims.cols, rows);
+}
+
+/** Pan the terminal container horizontally to keep the cursor visible. */
+function panToCursor(): void {
+  if (!ptyDims) return;
+
+  const cursorX = terminal.buffer.active.cursorX;
+  const core = (terminal as any)._core;
+  const cellWidth: number = core._renderService.dimensions.css.cell.width;
+  if (!cellWidth) return;
+
+  const cursorPixelX = cursorX * cellWidth;
+  const viewportWidth = terminalContainer.clientWidth;
+  const totalWidth = ptyDims.cols * cellWidth;
+
+  // Terminal fits entirely — no panning needed
+  if (totalWidth <= viewportWidth) {
+    terminalContainer.scrollLeft = 0;
+    return;
+  }
+
+  const margin = viewportWidth * 0.3;
+  const current = terminalContainer.scrollLeft;
+
+  if (cursorPixelX < current + margin) {
+    terminalContainer.scrollLeft = Math.max(0, cursorPixelX - margin);
+  } else if (cursorPixelX > current + viewportWidth - margin) {
+    terminalContainer.scrollLeft = Math.min(
+      cursorPixelX - viewportWidth + margin,
+      totalWidth - viewportWidth,
+    );
+  }
+}
+
+// Pan to cursor after every render cycle
+terminal.onRender(() => {
+  if (ptyDims) requestAnimationFrame(panToCursor);
+});
+
 // --- WebSocket Connection ---
 let reconnectOverlay: HTMLElement | null = null;
 let endedTimer: ReturnType<typeof setTimeout> | null = null;
@@ -211,6 +289,12 @@ const connection = new ConnectionManager({
             lastSeq = msg.seq;
           }
           break;
+        case "resize":
+          if (typeof msg.cols === "number" && typeof msg.rows === "number") {
+            ptyDims = { cols: msg.cols, rows: msg.rows };
+            applyPtyDimensions();
+          }
+          break;
         // Future message types (notifications, permissions, etc.) go here
       }
     } catch {
@@ -271,8 +355,15 @@ function updateLayout(): void {
   const totalBottomSpace = extraKeysBarHeight + lastKeyboardHeight;
   document.documentElement.style.setProperty("--extra-keys-height", `${totalBottomSpace}px`);
 
-  fitAddon.fit();
-  sendResize();
+  if (ptyDims) {
+    // Server controls PTY size — adapt font and pan to cursor
+    applyPtyDimensions();
+    panToCursor();
+  } else {
+    // No server dimensions yet — use fitAddon to size naturally
+    fitAddon.fit();
+    sendResize();
+  }
 }
 
 window.addEventListener("resize", updateLayout);

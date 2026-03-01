@@ -23,12 +23,14 @@ export interface SyncServerOptions {
   webClientPath: string;
   host: string;
   port: number;
+  localTerminalOwnsResize?: boolean;
 }
 
 export interface SyncServer {
   httpServer: ReturnType<typeof createServer>;
   wssServer: WebSocketServer;
   close(): void;
+  broadcastResize(cols: number, rows: number): void;
 }
 
 /** Extensions eligible for gzip compression. */
@@ -92,7 +94,7 @@ const PONG_TIMEOUT_MS = 10_000; // Close connection if no pong within 10s
 const SCROLLBACK_BUFFER_SIZE = 50_000; // Characters to buffer for reconnecting clients
 
 export function createSyncServer(options: SyncServerOptions): SyncServer {
-  const { ptyManager, token, webClientPath, host, port } = options;
+  const { ptyManager, token, webClientPath, host, port, localTerminalOwnsResize = false } = options;
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
 
@@ -160,6 +162,9 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
     }
 
+    // Send current PTY dimensions so the web client can match
+    ws.send(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }));
+
     ws.on("pong", () => {
       aliveMap.set(ws, true);
     });
@@ -175,7 +180,9 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
           typeof message.cols === "number" &&
           typeof message.rows === "number"
         ) {
-          ptyManager.resize(message.cols, message.rows);
+          if (!localTerminalOwnsResize) {
+            ptyManager.resize(message.cols, message.rows);
+          }
         } else if (message.type === "resume" && typeof message.lastSeq === "number") {
           // Delta sync: send only the data the client missed since lastSeq
           const missed = seq - message.lastSeq;
@@ -236,6 +243,14 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       // Shut down servers
       wssServer.close();
       httpServer.close();
+    },
+    broadcastResize(cols: number, rows: number) {
+      const msg = JSON.stringify({ type: "resize", cols, rows });
+      for (const client of clients) {
+        if (client.readyState === client.OPEN) {
+          client.send(msg);
+        }
+      }
     },
   };
 }
