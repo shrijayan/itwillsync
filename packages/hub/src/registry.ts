@@ -98,23 +98,31 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
 
   /**
    * Start periodic health checks: verify session processes are still alive.
-   * Removes dead sessions (process no longer running).
+   * Removes dead sessions (process no longer running AND no recent heartbeat).
    */
   startHealthChecks(intervalMs = 15_000): void {
     this.healthCheckInterval = setInterval(() => {
+      const now = Date.now();
       for (const [id, session] of this.sessions) {
+        const elapsed = now - session.lastSeen;
+
+        // If CLI sent a heartbeat recently, session is alive — trust it
+        // over process.kill which can be unreliable (EPERM, macOS quirks)
+        if (elapsed <= 20_000) {
+          continue;
+        }
+
         try {
           // process.kill(pid, 0) checks if process exists without sending signal
           process.kill(session.pid, 0);
 
-          // Update idle status based on lastSeen
-          const elapsed = Date.now() - session.lastSeen;
+          // No recent heartbeat + process alive → mark idle
           if (elapsed > 30_000 && session.status === "active") {
             session.status = "idle";
             this.emit("session-updated", session);
           }
         } catch {
-          // Process no longer exists — remove session
+          // No recent heartbeat AND process gone → remove session
           this.sessions.delete(id);
           this.emit("session-removed", id);
         }
