@@ -125,7 +125,15 @@ export function createSessionCard(
   badge.className = `status-badge ${session.status}`;
   badge.textContent = session.status;
 
+  const attentionBadge = document.createElement("span");
+  attentionBadge.className = "attention-badge";
+  attentionBadge.textContent = "Needs your attention";
+  if (session.status !== "attention") {
+    attentionBadge.style.display = "none";
+  }
+
   statusSection.appendChild(badge);
+  statusSection.appendChild(attentionBadge);
 
   // Action bar
   const actions = document.createElement("div");
@@ -292,6 +300,11 @@ export function updateSessionCard(card: HTMLElement, session: SessionData): void
   if (nameEl && !(nameEl as HTMLElement).style.display) {
     // Only update name if not currently being edited
     nameEl.textContent = session.name || session.agent;
+  }
+
+  const attentionBadge = card.querySelector(".attention-badge") as HTMLElement | null;
+  if (attentionBadge) {
+    attentionBadge.style.display = session.status === "attention" ? "" : "none";
   }
 
   if (session.status === "attention") {
