@@ -31,6 +31,23 @@ interface SessionConnection {
 }
 
 /**
+ * Checks if raw terminal data contains an attention signal:
+ * standalone BEL, OSC 9 (iTerm2, excluding progress bars), OSC 99 (Kitty), OSC 777 (Ghostty).
+ */
+export function containsAttentionSignal(data: string): boolean {
+  // OSC attention sequences
+  if (/\x1b\]9;(?!4;)/.test(data)) return true;   // OSC 9 (skip progress bars 9;4;...)
+  if (/\x1b\]99;/.test(data)) return true;          // OSC 99 (Kitty)
+  if (/\x1b\]777;/.test(data)) return true;         // OSC 777 (Ghostty)
+
+  // Standalone BEL — strip OSC sequences first (they use BEL as terminator)
+  const withoutOsc = data.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "");
+  if (withoutOsc.includes("\x07")) return true;
+
+  return false;
+}
+
+/**
  * Strips ANSI escape codes from terminal output.
  * Removes CSI sequences, OSC sequences, and other control chars.
  */
@@ -151,6 +168,14 @@ export class PreviewCollector extends EventEmitter<PreviewCollectorEvents> {
   private handleData(sessionId: string, data: string): void {
     const conn = this.connections.get(sessionId);
     if (!conn) return;
+
+    // Detect attention signals (BEL/OSC) before stripping
+    if (containsAttentionSignal(data)) {
+      const session = this.registry.getById(sessionId);
+      if (session && session.status !== "attention") {
+        this.registry.updateStatus(sessionId, "attention");
+      }
+    }
 
     // Strip ANSI and append to buffer
     const clean = stripAnsi(data);

@@ -74,7 +74,9 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
     const session = this.sessions.get(id);
     if (session) {
       session.lastSeen = Date.now();
-      session.status = "active";
+      if (session.status === "idle") {
+        session.status = "active";
+      }
     }
   }
 

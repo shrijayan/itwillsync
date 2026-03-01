@@ -227,6 +227,14 @@ export function createDashboardServer(options: DashboardServerOptions) {
             break;
           }
 
+          case "clear-attention": {
+            const session = registry.getById(msg.sessionId);
+            if (session && session.status === "attention") {
+              registry.updateStatus(msg.sessionId, "active");
+            }
+            break;
+          }
+
           case "get-metadata": {
             const session = registry.getById(msg.sessionId);
             if (!session) {

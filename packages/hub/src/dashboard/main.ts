@@ -8,6 +8,12 @@ import {
   type SessionMetadata,
   type CardCallbacks,
 } from "./session-card.js";
+import {
+  unlockAudio,
+  notifyAttention,
+  clearAttention,
+  clearAll as clearAllNotifications,
+} from "./audio.js";
 
 // Extract connection info from URL
 const params = new URLSearchParams(window.location.search);
@@ -34,6 +40,15 @@ const statusDot = document.getElementById("status-dot")!;
 
 let uptimeInterval: ReturnType<typeof setInterval> | null = null;
 
+// Unlock audio on first user gesture (mobile browser requirement)
+function handleFirstInteraction(): void {
+  unlockAudio();
+  document.removeEventListener("click", handleFirstInteraction);
+  document.removeEventListener("touchstart", handleFirstInteraction);
+}
+document.addEventListener("click", handleFirstInteraction);
+document.addEventListener("touchstart", handleFirstInteraction);
+
 // --- WS sending ---
 
 function sendMessage(msg: object): void {
@@ -46,8 +61,14 @@ function sendMessage(msg: object): void {
 
 const cardCallbacks: CardCallbacks = {
   onOpen(session: SessionData) {
+    // Use latest session data (the closure session may be stale)
+    const current = sessions.get(session.id) || session;
+    if (current.status === "attention") {
+      sendMessage({ type: "clear-attention", sessionId: current.id });
+      clearAttention(current.id);
+    }
     const hubUrl = window.location.href;
-    const url = `http://${baseIP}:${session.port}?token=${session.token}&hub=${encodeURIComponent(hubUrl)}`;
+    const url = `http://${baseIP}:${current.port}?token=${current.token}&hub=${encodeURIComponent(hubUrl)}`;
     window.open(url, "_blank");
   },
 
@@ -139,11 +160,15 @@ function connect(): void {
 
       switch (msg.type) {
         case "sessions": {
+          clearAllNotifications();
           for (const id of sessionCards.keys()) {
             removeSession(id);
           }
           for (const session of msg.sessions as SessionData[]) {
             addSession(session);
+            if (session.status === "attention") {
+              notifyAttention(session.id);
+            }
           }
           break;
         }
@@ -152,11 +177,19 @@ function connect(): void {
           break;
         }
         case "session-removed": {
-          removeSession(msg.sessionId as string);
+          const removedId = msg.sessionId as string;
+          clearAttention(removedId);
+          removeSession(removedId);
           break;
         }
         case "session-updated": {
-          updateSession(msg.session as SessionData);
+          const updated = msg.session as SessionData;
+          updateSession(updated);
+          if (updated.status === "attention") {
+            notifyAttention(updated.id);
+          } else {
+            clearAttention(updated.id);
+          }
           break;
         }
         case "preview": {
@@ -185,6 +218,7 @@ function connect(): void {
 
   ws.onclose = () => {
     statusDot.className = "reconnecting";
+    clearAllNotifications();
     scheduleReconnect();
   };
 
