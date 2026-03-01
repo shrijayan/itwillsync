@@ -124,6 +124,9 @@ export function createSessionCard(
   const badge = document.createElement("span");
   badge.className = `status-badge ${session.status}`;
   badge.textContent = session.status;
+  if (session.status === "attention") {
+    badge.style.display = "none";
+  }
 
   const attentionBadge = document.createElement("span");
   attentionBadge.className = "attention-badge";
@@ -302,9 +305,13 @@ export function updateSessionCard(card: HTMLElement, session: SessionData): void
     nameEl.textContent = session.name || session.agent;
   }
 
+  const isAttention = session.status === "attention";
+  if (badge) {
+    (badge as HTMLElement).style.display = isAttention ? "none" : "";
+  }
   const attentionBadge = card.querySelector(".attention-badge") as HTMLElement | null;
   if (attentionBadge) {
-    attentionBadge.style.display = session.status === "attention" ? "" : "none";
+    attentionBadge.style.display = isAttention ? "" : "none";
   }
 
   if (session.status === "attention") {
