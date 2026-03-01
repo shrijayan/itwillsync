@@ -1,10 +1,11 @@
-name: Deploy Landing Page
+name: Deploy Website
 
 on:
   push:
     branches: [main]
     paths:
       - "packages/landing/**"
+      - "packages/docs/**"
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,12 @@ jobs:
 
       - name: Build landing page
         run: pnpm --filter @itwillsync/landing build
+
+      - name: Build docs
+        run: pnpm --filter @itwillsync/docs build
+
+      - name: Merge into single site
+        run: cp -r packages/docs/.vitepress/dist packages/landing/dist/docs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

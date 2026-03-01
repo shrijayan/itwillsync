@@ -172,6 +172,11 @@ export function createSessionCard(
   const metaPanel = document.createElement("div");
   metaPanel.className = "card-metadata hidden";
 
+  // Tap anywhere on card to open session
+  card.addEventListener("click", () => {
+    callbacks.onOpen(session);
+  });
+
   card.appendChild(header);
   card.appendChild(cwdEl);
   card.appendChild(preview);
@@ -213,6 +218,7 @@ function showStopConfirm(card: HTMLElement, sessionId: string, onStop: (id: stri
     overlay.remove();
   });
 
+  overlay.addEventListener("click", (e) => e.stopPropagation());
   overlay.appendChild(msg);
   overlay.appendChild(yesBtn);
   overlay.appendChild(noBtn);
@@ -256,6 +262,7 @@ function startRename(card: HTMLElement, sessionId: string, onRename: (id: string
   });
 
   input.addEventListener("blur", finishRename);
+  input.addEventListener("click", (e) => e.stopPropagation());
 
   (nameEl as HTMLElement).style.display = "none";
   nameEl.parentElement?.insertBefore(input, nameEl.nextSibling);

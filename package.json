@@ -5,7 +5,9 @@
     "build": "pnpm --filter @itwillsync/web-client build && pnpm --filter @itwillsync/hub build && pnpm --filter itwillsync build",
     "test": "pnpm -r test",
     "dev": "pnpm -r --parallel dev",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "docs:dev": "pnpm --filter @itwillsync/docs dev",
+    "docs:build": "pnpm --filter @itwillsync/docs build"
   },
   "packageManager": "pnpm@10.30.3",
   "engines": {
