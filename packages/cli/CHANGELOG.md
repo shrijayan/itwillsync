@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/shrijayan/itwillsync/compare/v1.2.0...v1.2.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* implement WebSocket connection management with reconnection logic ([5d96e70](https://github.com/shrijayan/itwillsync/commit/5d96e703cbf38b65d345ad786cbdf89e737c7ffe))
+
 # [1.2.0](https://github.com/shrijayan/itwillsync/compare/v1.1.0...v1.2.0) (2026-02-28)
 
 
