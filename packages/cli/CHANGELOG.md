@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/shrijayan/itwillsync/compare/v1.3.0...v1.3.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* enhance Enter key handling for modified input in extra keys toolbar ([2f46955](https://github.com/shrijayan/itwillsync/commit/2f46955db17f464fb8379a4cc23034e2fcae5404))
+* implement dynamic PTY resizing and font adjustment in web client ([07b0493](https://github.com/shrijayan/itwillsync/commit/07b0493d7fa3825396e625c365c0eafbdef43f77))
+
 # [1.3.0](https://github.com/shrijayan/itwillsync/compare/v1.2.1...v1.3.0) (2026-03-01)
 
 
