@@ -84,6 +84,10 @@ export function applyModifiers(data: string): string {
   } else if (csiTilde) {
     // \x1b[5~ → \x1b[5;5~ (Ctrl+PgUp), etc.
     result = `\x1b[${csiTilde[1]};${modParam}~`;
+  } else if (result === "\r" || result === "\n") {
+    // Modified Enter: CSI u encoding (kitty keyboard protocol)
+    // Shift+Enter → \x1b[13;2u, Ctrl+Enter → \x1b[13;5u, etc.
+    result = `\x1b[13;${modParam}u`;
   } else if (result.length === 1) {
     // Single printable character
     if (shiftActive && !ctrlActive && !altActive) {
