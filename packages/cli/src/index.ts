@@ -15,6 +15,7 @@ import {
   sendHeartbeat,
   listSessions,
   stopHub,
+  killStaleHub,
   HUB_EXTERNAL_PORT,
   type RegisteredSession,
 } from "./hub-client.js";
@@ -53,20 +54,28 @@ function preventSleep(): ChildProcess | null {
 
 /**
  * Ensure the hub daemon is running. Spawns it if needed.
+ * Handles stale hubs (running but missing config).
  * Returns true if this session is the first (should show QR code).
  */
 async function ensureHub(): Promise<boolean> {
   const hubRunning = await discoverHub();
 
   if (hubRunning) {
-    return false; // Hub already running, we're not the first session
+    // Hub is responding — check if we have its config
+    const config = getHubConfig();
+    if (config) {
+      return false; // Hub running with valid config, not the first session
+    }
+
+    // Hub is running but config is missing (stale hub) — kill and respawn
+    console.warn("  Detected stale hub daemon (no config). Restarting...");
+    await killStaleHub();
+    // Fall through to spawn a fresh hub
   }
 
   // Spawn hub daemon
   try {
     await spawnHub();
-    // Wait briefly for hub to write its config file
-    await new Promise((resolve) => setTimeout(resolve, 500));
     return true; // We spawned the hub — show QR
   } catch (err) {
     console.warn(`\n  Warning: Could not start hub daemon: ${(err as Error).message}`);
@@ -83,11 +92,11 @@ async function handleHubCommand(options: ReturnType<typeof parseArgs>): Promise<
   const hubRunning = await discoverHub();
 
   if (options.hubStop) {
-    if (!hubRunning || !hubConfig) {
+    if (!hubRunning) {
       console.log("\n  No hub daemon is running.\n");
       return;
     }
-    const stopped = stopHub();
+    const stopped = await stopHub();
     if (stopped) {
       console.log("\n  Hub daemon stopped.\n");
     } else {
@@ -114,9 +123,14 @@ async function handleHubCommand(options: ReturnType<typeof parseArgs>): Promise<
   }
 
   if (options.hubInfo) {
-    if (!hubRunning || !hubConfig) {
+    if (!hubRunning) {
       console.log("\n  No hub daemon is running.");
       console.log("  Start a session with: itwillsync -- <agent>\n");
+      return;
+    }
+    if (!hubConfig) {
+      console.log("\n  Hub daemon is running but its config is missing (stale state).");
+      console.log("  Run: itwillsync hub stop\n");
       return;
     }
 

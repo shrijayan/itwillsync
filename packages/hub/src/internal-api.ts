@@ -27,6 +27,7 @@ export function createInternalApi(options: InternalApiOptions) {
         res.writeHead(200);
         res.end(JSON.stringify({
           status: "ok",
+          pid: process.pid,
           sessions: registry.size,
           uptime: process.uptime(),
         }));
@@ -187,11 +188,14 @@ export function createInternalApi(options: InternalApiOptions) {
     }
   });
 
-  // Bind to localhost only
-  server.listen(port, "127.0.0.1");
-
   return {
     server,
+    listen(): Promise<void> {
+      return new Promise((resolve, reject) => {
+        server.on("error", reject);
+        server.listen(port, "127.0.0.1", () => resolve());
+      });
+    },
     close() {
       server.close();
     },

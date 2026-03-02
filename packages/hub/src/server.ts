@@ -317,12 +317,15 @@ export function createDashboardServer(options: DashboardServerOptions) {
     });
   }
 
-  // Start listening
-  httpServer.listen(port, host);
-
   return {
     httpServer,
     wss,
+    listen(): Promise<void> {
+      return new Promise((resolve, reject) => {
+        httpServer.on("error", reject);
+        httpServer.listen(port, host, () => resolve());
+      });
+    },
     close() {
       clearInterval(pingInterval);
       for (const client of clients) {
