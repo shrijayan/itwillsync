@@ -1,3 +1,11 @@
+## [1.3.2](https://github.com/shrijayan/itwillsync/compare/v1.3.1...v1.3.2) (2026-03-02)
+
+
+### Bug Fixes
+
+* add documentation links to the landing page and improve hub management logic ([40ad434](https://github.com/shrijayan/itwillsync/commit/40ad43455f1011ce868cf0dfc3ca0168d2522563))
+* replace setTimeout with api.listen for server readiness in tests ([986b6c7](https://github.com/shrijayan/itwillsync/commit/986b6c70eb7f202ba2e8fca78e2c5cb0c3c4cbf7))
+
 ## [1.3.1](https://github.com/shrijayan/itwillsync/compare/v1.3.0...v1.3.1) (2026-03-01)
 
 
