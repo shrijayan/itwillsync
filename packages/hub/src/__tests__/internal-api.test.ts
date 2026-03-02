@@ -43,8 +43,7 @@ describe("Internal API", () => {
   beforeAll(async () => {
     registry = new SessionRegistry();
     api = createInternalApi({ registry, port: TEST_PORT });
-    // Wait for server to be ready
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await api.listen();
   });
 
   afterAll(() => {
