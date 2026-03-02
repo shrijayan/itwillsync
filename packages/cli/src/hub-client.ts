@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -89,6 +89,72 @@ export async function discoverHub(): Promise<boolean> {
 }
 
 /**
+ * Get the hub daemon's PID from its health endpoint.
+ * Useful when hub.json is missing but the hub is still running.
+ */
+export async function getHubPidFromHealth(): Promise<number | null> {
+  return new Promise((resolve) => {
+    const req = request(
+      {
+        hostname: "127.0.0.1",
+        port: HUB_INTERNAL_PORT,
+        path: "/api/health",
+        method: "GET",
+        timeout: 2000,
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => { data += chunk; });
+        res.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            resolve(json.pid && typeof json.pid === "number" ? json.pid : null);
+          } catch {
+            resolve(null);
+          }
+        });
+      },
+    );
+
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(null);
+    });
+    req.end();
+  });
+}
+
+/**
+ * Kill a stale hub process and clean up its config files.
+ * Returns true if the stale hub was successfully terminated.
+ */
+export async function killStaleHub(): Promise<boolean> {
+  const pid = await getHubPidFromHealth();
+  if (!pid) return false;
+
+  try {
+    process.kill(pid, "SIGTERM");
+  } catch {
+    return false;
+  }
+
+  // Wait for the process to exit and ports to free
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 200));
+    const stillRunning = await discoverHub();
+    if (!stillRunning) break;
+  }
+
+  // Clean up any leftover config files
+  const hubDir = getHubDir();
+  try { unlinkSync(join(hubDir, "hub.json")); } catch {}
+  try { unlinkSync(join(hubDir, "hub.pid")); } catch {}
+
+  return true;
+}
+
+/**
  * Spawn the hub daemon as a detached background process.
  * Returns when the hub signals it's ready.
  */
@@ -99,7 +165,7 @@ export async function spawnHub(): Promise<void> {
   return new Promise((resolve, reject) => {
     const child: ChildProcess = spawn("node", [hubPath], {
       detached: true,
-      stdio: ["ignore", "pipe", "ignore"],
+      stdio: ["ignore", "pipe", "pipe"],
       env: {
         ...process.env,
         // Pass config dir to hub
@@ -111,6 +177,7 @@ export async function spawnHub(): Promise<void> {
 
     // Wait for the hub to signal readiness
     let output = "";
+    let stderrOutput = "";
     const timeout = setTimeout(() => {
       reject(new Error("Hub daemon startup timed out"));
     }, 10_000);
@@ -119,10 +186,15 @@ export async function spawnHub(): Promise<void> {
       output += data.toString();
       if (output.includes("hub:ready:")) {
         clearTimeout(timeout);
-        // Detach from stdout to let the hub run independently
+        // Detach from stdout/stderr to let the hub run independently
         child.stdout?.destroy();
+        child.stderr?.destroy();
         resolve();
       }
+    });
+
+    child.stderr?.on("data", (data: Buffer) => {
+      stderrOutput += data.toString();
     });
 
     child.on("error", (err) => {
@@ -133,7 +205,10 @@ export async function spawnHub(): Promise<void> {
     child.on("exit", (code) => {
       clearTimeout(timeout);
       if (code !== null && code !== 0) {
-        reject(new Error(`Hub daemon exited with code ${code}`));
+        const detail = stderrOutput.trim();
+        reject(new Error(
+          `Hub daemon exited with code ${code}${detail ? `:\n${detail}` : ""}`
+        ));
       }
     });
   });
@@ -267,13 +342,26 @@ export async function listSessions(): Promise<RegisteredSession[]> {
 
 /**
  * Stop the hub daemon by reading its PID and sending SIGTERM.
+ * Falls back to querying the health endpoint if hub.json is missing.
  */
-export function stopHub(): boolean {
+export async function stopHub(): Promise<boolean> {
+  // Try from hub.json first
   const config = getHubConfig();
-  if (!config) return false;
+  if (config) {
+    try {
+      process.kill(config.pid, "SIGTERM");
+      return true;
+    } catch {
+      // PID may be stale, try health endpoint
+    }
+  }
+
+  // Fall back to health endpoint for PID
+  const pid = await getHubPidFromHealth();
+  if (!pid) return false;
 
   try {
-    process.kill(config.pid, "SIGTERM");
+    process.kill(pid, "SIGTERM");
     return true;
   } catch {
     return false;

@@ -1,6 +1,6 @@
 # itwillsync
 
-**[Website](https://shrijayan.github.io/itwillsync/)** | **[npm](https://www.npmjs.com/package/itwillsync)** | **[Demo Video](https://youtu.be/Zc0Tb98CXh0)**
+**[Website](https://shrijayan.github.io/itwillsync/)** | **[Docs](https://shrijayan.github.io/itwillsync/docs/)** | **[npm](https://www.npmjs.com/package/itwillsync)** | **[Demo Video](https://youtu.be/Zc0Tb98CXh0)**
 
 Sync any terminal-based coding agent to your phone. Local network or Tailscale. Open source, agent-agnostic, zero cloud.
 

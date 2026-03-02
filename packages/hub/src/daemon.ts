@@ -77,6 +77,12 @@ async function main(): Promise<void> {
     previewCollector,
   });
 
+  // Wait for both servers to actually bind to their ports
+  await Promise.all([
+    internalApi.listen(),
+    dashboardServer.listen(),
+  ]);
+
   // Auto-shutdown timer: shut down when no sessions remain
   let shutdownTimer: ReturnType<typeof setTimeout> | null = null;
 
