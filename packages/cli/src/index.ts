@@ -271,20 +271,19 @@ async function main(): Promise<void> {
     ? `http://${ip}:${HUB_EXTERNAL_PORT}?token=${hubConfig.masterToken}`
     : null;
 
-  if (isFirstSession && dashboardUrl && !options.noQr) {
-    // First session with hub — show QR pointing to dashboard
+  if (dashboardUrl && !options.noQr) {
+    // Show QR pointing to dashboard
+    if (!isFirstSession) {
+      console.log(`\n  Session "${cmd}" registered with hub.`);
+    }
     displayQR(dashboardUrl);
-    console.log(`  Dashboard: ${dashboardUrl}`);
-  } else if (isFirstSession && !options.noQr) {
-    // Fallback: no hub, show direct session URL
-    const directUrl = `http://${ip}:${port}?token=${token}`;
-    displayQR(directUrl);
   } else if (dashboardUrl) {
-    // Subsequent session — print full dashboard URL with token
+    // QR disabled — text only
     console.log(`\n  Session "${cmd}" registered with hub.`);
     console.log(`  Dashboard: ${dashboardUrl}`);
     console.log("");
   } else if (!options.noQr) {
+    // No hub — show direct session URL
     const directUrl = `http://${ip}:${port}?token=${token}`;
     displayQR(directUrl);
   }
