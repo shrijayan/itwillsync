@@ -88,7 +88,7 @@ describe("Internal API — Session Management", () => {
   beforeAll(async () => {
     registry = new SessionRegistry();
     api = createInternalApi({ registry, port: TEST_PORT });
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await api.listen();
   });
 
   afterAll(() => {
