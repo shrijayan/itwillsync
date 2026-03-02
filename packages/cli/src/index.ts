@@ -326,6 +326,20 @@ async function main(): Promise<void> {
 
   // Clean shutdown
   async function cleanup(): Promise<void> {
+    // Restore terminal state that the child process may have modified.
+    // Agents like Codex enable kitty keyboard protocol, bracketed paste,
+    // mouse tracking etc. — if killed abruptly they don't get to reset these.
+    process.stdout.write(
+      "\x1b[>0u" +        // Reset kitty keyboard protocol to default
+      "\x1b[?2004l" +     // Disable bracketed paste mode
+      "\x1b[?1000l" +     // Disable mouse click tracking
+      "\x1b[?1002l" +     // Disable mouse button tracking
+      "\x1b[?1003l" +     // Disable mouse all-motion tracking
+      "\x1b[?1006l" +     // Disable SGR mouse encoding
+      "\x1b[?25h" +       // Show cursor (in case it was hidden)
+      "\x1b[?1049l"       // Exit alternate screen buffer (if active)
+    );
+
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(false);
     }
