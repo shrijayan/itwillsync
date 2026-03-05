@@ -1,3 +1,12 @@
+## [1.3.3](https://github.com/shrijayan/itwillsync/compare/v1.3.2...v1.3.3) (2026-03-05)
+
+
+### Bug Fixes
+
+* enhance installation documentation and improve terminal scrolling behavior ([5c5cdac](https://github.com/shrijayan/itwillsync/commit/5c5cdacdb2f444623f710096ae18bc6516e70ffa))
+* improve QR display logic for dashboard and session registration ([6984626](https://github.com/shrijayan/itwillsync/commit/6984626befa353bb98d37ab645a1b85349a6aac3))
+* restore terminal state on cleanup to prevent UI issues after abrupt termination ([4f4d10d](https://github.com/shrijayan/itwillsync/commit/4f4d10dc6aede6590af10ceb6284ed5fb39adacf))
+
 ## [1.3.2](https://github.com/shrijayan/itwillsync/compare/v1.3.1...v1.3.2) (2026-03-02)
 
 
