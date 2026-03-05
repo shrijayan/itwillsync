@@ -15,7 +15,8 @@ const statusText = document.getElementById("status-text")!;
 // --- Extract params from URL ---
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
-const hubUrl = params.get("hub");
+const rawHubUrl = params.get("hub");
+const hubUrl = rawHubUrl && /^https?:\/\//i.test(rawHubUrl) ? rawHubUrl : null;
 
 if (!token) {
   statusText.textContent = "Error: No auth token in URL";
