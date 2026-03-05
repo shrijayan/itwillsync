@@ -78,10 +78,6 @@ Options:
 
 Claude Code, Aider, Goose, Codex, Cline, Copilot CLI, or any terminal-based tool.
 
-## Development
-
-See [docs/development.md](docs/development.md) for architecture, project structure, and contributing guide.
-
 ## License
 
 MIT
