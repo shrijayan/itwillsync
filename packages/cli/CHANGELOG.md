@@ -1,3 +1,11 @@
+## [1.3.7](https://github.com/shrijayan/itwillsync/compare/v1.3.6...v1.3.7) (2026-03-05)
+
+
+### Bug Fixes
+
+* add README.md for CLI package to .gitignore ([6da7698](https://github.com/shrijayan/itwillsync/commit/6da7698e23a5ff8be1e1bddbe8f8f236eff9fe8b))
+* remove README.md and update prepack script in package.json ([ff052b6](https://github.com/shrijayan/itwillsync/commit/ff052b6231892ec56e0284082a979220c92850c2))
+
 ## [1.3.6](https://github.com/shrijayan/itwillsync/compare/v1.3.5...v1.3.6) (2026-03-05)
 
 
