@@ -1,3 +1,13 @@
+## [1.3.4](https://github.com/shrijayan/itwillsync/compare/v1.3.3...v1.3.4) (2026-03-05)
+
+
+### Bug Fixes
+
+* remove development guide and related documentation ([7ab073c](https://github.com/shrijayan/itwillsync/commit/7ab073c38216e4e60938671d54c120a2a66d79c8))
+* remove unnecessary dashes from command usage in README ([6edaf2c](https://github.com/shrijayan/itwillsync/commit/6edaf2c818105b4ffa654b89d90447298489d0bb))
+* sync package versions and add version synchronization script ([2f98157](https://github.com/shrijayan/itwillsync/commit/2f9815797c6e1b09d15c6397f1cae0b43b69ec14))
+* update CI permissions and refine URL parameter extraction in main.ts ([bb73dc0](https://github.com/shrijayan/itwillsync/commit/bb73dc04a9ca6e57b8024600fc8abe53cee4c246))
+
 ## [1.3.3](https://github.com/shrijayan/itwillsync/compare/v1.3.2...v1.3.3) (2026-03-05)
 
 
