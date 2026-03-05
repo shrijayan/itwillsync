@@ -5,9 +5,9 @@
 Sync any terminal-based coding agent to your phone. Local network or Tailscale. Open source, agent-agnostic, zero cloud.
 
 ```
-npx itwillsync -- claude
-npx itwillsync -- aider
-npx itwillsync -- bash
+npx itwillsync claude
+npx itwillsync aider
+npx itwillsync bash
 ```
 
 ## How it works
@@ -26,11 +26,7 @@ npx itwillsync -- bash
 
 ```bash
 # Run directly (no install needed)
-npx itwillsync -- claude
-
-# Or install globally
-npm install -g itwillsync
-itwillsync -- aider --model gpt-4
+npx itwillsync claude
 ```
 
 On first run, a setup wizard asks how you want to connect — local WiFi or Tailscale. Your choice is saved for future sessions.
@@ -41,13 +37,13 @@ By default, your phone needs to be on the same WiFi. With [Tailscale](https://ta
 
 ```bash
 # First time: the setup wizard will detect Tailscale automatically
-itwillsync -- claude
+itwillsync claude
 
 # Or use Tailscale for a single session
-itwillsync --tailscale -- claude
+itwillsync --tailscale claude
 
 # Switch back to local WiFi for a session
-itwillsync --local -- claude
+itwillsync --local claude
 
 # Re-run setup anytime
 itwillsync setup
