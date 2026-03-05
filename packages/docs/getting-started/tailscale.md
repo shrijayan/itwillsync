@@ -2,11 +2,70 @@
 
 By default, your phone needs to be on the same WiFi network as your computer. With [Tailscale](https://tailscale.com), you can connect from anywhere — coffee shop, cellular, different network.
 
-## Setup
+## Install Tailscale
 
-1. Install Tailscale on your **computer** and **phone**
-2. Sign in to the same Tailscale account on both devices
-3. That's it — itwillsync detects Tailscale automatically
+You need Tailscale on both your **computer** and your **phone**. Sign into the same account on both — that's what connects them.
+
+### macOS
+
+The quickest way is via Homebrew:
+
+```bash
+brew install --cask tailscale
+```
+
+Then open Tailscale from Applications → click **Sign in** → choose your email provider → approve in browser.
+
+Verify it's working:
+
+```bash
+tailscale status
+```
+
+> Other install methods: [Mac App Store](https://apps.apple.com/app/tailscale/id1475387142) · [Direct download](https://tailscale.com/download) · [Official docs](https://tailscale.com/docs/install/mac)
+
+### Android
+
+1. Install from the [Google Play Store](https://play.google.com/store/apps/details?id=com.tailscale.ipn)
+2. Open the app → tap **Get Started**
+3. Accept the VPN configuration prompt
+4. Tap **Sign in with Google** (or "Sign in with other" for other providers)
+5. **Use the same email/account as your computer**
+
+> Requires Android 8.0+ · [Official docs](https://tailscale.com/docs/install/android)
+
+### iOS (iPhone / iPad)
+
+1. Install from the [App Store](https://apps.apple.com/app/tailscale/id1470499037)
+2. Open the app → tap **Get Started**
+3. Accept the VPN configuration prompt
+4. Tap **Log in** → sign in with a supported provider
+5. **Use the same email/account as your computer**
+
+> Requires iOS 15.0+ · [Official docs](https://tailscale.com/docs/install/ios)
+
+### Other Platforms
+
+Tailscale supports many more platforms. See the full list at [tailscale.com/docs/install](https://tailscale.com/docs/install):
+
+| Platform | Install Guide |
+|----------|--------------|
+| Linux | [tailscale.com/docs/install/linux](https://tailscale.com/docs/install/linux) |
+| Windows | [tailscale.com/docs/install/windows](https://tailscale.com/docs/install/windows) |
+| Windows (WSL 2) | [tailscale.com/docs/install/windows/wsl2](https://tailscale.com/docs/install/windows/wsl2) |
+| Chromebook | [tailscale.com/docs/install/chromebook](https://tailscale.com/docs/install/chromebook) |
+| Apple TV | [tailscale.com/docs/install/appletv](https://tailscale.com/docs/install/appletv) |
+| Amazon Fire | [tailscale.com/docs/install/amazon-fire](https://tailscale.com/docs/install/amazon-fire) |
+
+### Verify Connection
+
+Both devices should appear in your [Tailscale admin console](https://login.tailscale.com/admin/machines). On your computer, run:
+
+```bash
+tailscale status
+```
+
+You should see both devices listed. That's it — itwillsync detects Tailscale automatically.
 
 ## Usage
 

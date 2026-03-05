@@ -109,8 +109,20 @@ terminal.parser.registerOscHandler(777, () => {
 // possible, and we auto-pan horizontally to follow the cursor.
 let ptyDims: { cols: number; rows: number } | null = null;
 
-const MIN_FONT_SIZE = 12;
+const MIN_FONT_SIZE = 6;
 const DEFAULT_FONT_SIZE = 14;
+
+/** Measure the actual scrollbar width (0 on overlay-scrollbar systems like mobile). */
+let _scrollbarWidth: number | null = null;
+function getScrollbarWidth(): number {
+  if (_scrollbarWidth !== null) return _scrollbarWidth;
+  const outer = document.createElement("div");
+  outer.style.cssText = "position:absolute;top:-9999px;width:100px;height:100px;overflow:scroll;";
+  document.body.appendChild(outer);
+  _scrollbarWidth = outer.offsetWidth - outer.clientWidth;
+  outer.remove();
+  return _scrollbarWidth;
+}
 
 /** Measure the character-width / font-size ratio for the current font family. */
 function measureCharRatio(): number {
@@ -125,9 +137,9 @@ function applyPtyDimensions(): void {
   if (!ptyDims) return;
 
   const containerWidth = terminalContainer.clientWidth;
-  // 8px = xterm padding (4px each side), 14px scrollbar when scrollback > 0
+  // 8px = xterm padding (4px each side), scrollbar width varies by platform
   const padding = 8;
-  const scrollbar = terminal.options.scrollback === 0 ? 0 : 14;
+  const scrollbar = terminal.options.scrollback === 0 ? 0 : getScrollbarWidth();
   const availableWidth = containerWidth - padding - scrollbar;
 
   const charRatio = measureCharRatio();
@@ -144,9 +156,27 @@ function applyPtyDimensions(): void {
   terminal.resize(ptyDims.cols, rows);
 }
 
+// --- User scroll debounce: pause auto-pan while user is swiping ---
+let userScrolling = false;
+let userScrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+terminalContainer.addEventListener("touchstart", () => {
+  userScrolling = true;
+  if (userScrollTimer) clearTimeout(userScrollTimer);
+}, { passive: true });
+
+const resumeAutoPan = () => {
+  if (userScrollTimer) clearTimeout(userScrollTimer);
+  userScrollTimer = setTimeout(() => {
+    userScrolling = false;
+  }, 1500);
+};
+terminalContainer.addEventListener("touchend", resumeAutoPan, { passive: true });
+terminalContainer.addEventListener("touchcancel", resumeAutoPan, { passive: true });
+
 /** Pan the terminal container horizontally to keep the cursor visible. */
 function panToCursor(): void {
-  if (!ptyDims) return;
+  if (!ptyDims || userScrolling) return;
 
   const cursorX = terminal.buffer.active.cursorX;
   const core = (terminal as any)._core;

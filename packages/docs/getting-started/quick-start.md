@@ -8,6 +8,10 @@ Run itwillsync with your agent:
 itwillsync -- claude
 ```
 
+::: tip First run?
+On your first run, a setup wizard asks how you want to connect — Local WiFi or Tailscale. See [Installation → First Run](/getting-started/installation#first-run) for details.
+:::
+
 A QR code appears in your terminal along with the dashboard URL.
 
 ## Connect Your Phone
