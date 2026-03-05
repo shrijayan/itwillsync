@@ -1,4 +1,13 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { SESSION_PORT_START } from "./hub-client.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const { version } = JSON.parse(
+  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
+);
 
 export const DEFAULT_PORT = SESSION_PORT_START;
 
@@ -84,7 +93,7 @@ export function parseArgs(argv: string[]): CliOptions {
       printHelp();
       process.exit(0);
     } else if (arg === "--version" || arg === "-v") {
-      console.log("itwillsync v0.1.0");
+      console.log(`itwillsync v${version}`);
       process.exit(0);
     } else {
       // If no -- separator, treat remaining args as the command
