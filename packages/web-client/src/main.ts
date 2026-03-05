@@ -16,7 +16,22 @@ const statusText = document.getElementById("status-text")!;
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
 const rawHubUrl = params.get("hub");
-const hubUrl = rawHubUrl && /^https?:\/\//i.test(rawHubUrl) ? rawHubUrl : null;
+const hubUrl = (() => {
+  if (!rawHubUrl) return null;
+  try {
+    const parsed = new URL(rawHubUrl);
+    // Only allow http/https to same host (hub runs on same machine, different port)
+    if (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      parsed.hostname === window.location.hostname
+    ) {
+      return parsed.href;
+    }
+  } catch {
+    // Invalid URL
+  }
+  return null;
+})();
 
 if (!token) {
   statusText.textContent = "Error: No auth token in URL";
