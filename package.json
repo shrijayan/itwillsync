@@ -4,6 +4,7 @@
   "scripts": {
     "build": "pnpm --filter @itwillsync/web-client build && pnpm --filter @itwillsync/hub build && pnpm --filter itwillsync build",
     "test": "pnpm -r test",
+    "test:coverage": "pnpm --filter itwillsync --filter @itwillsync/hub --filter @itwillsync/web-client exec vitest run --coverage",
     "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r clean",
     "docs:dev": "pnpm --filter @itwillsync/docs dev",
@@ -17,6 +18,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "semantic-release": "^24.0.0"
   }
 }
