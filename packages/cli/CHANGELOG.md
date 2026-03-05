@@ -1,3 +1,13 @@
+## [1.3.5](https://github.com/shrijayan/itwillsync/compare/v1.3.4...v1.3.5) (2026-03-05)
+
+
+### Bug Fixes
+
+* add Code of Conduct and reference in contributing guidelines ([eab8a0b](https://github.com/shrijayan/itwillsync/commit/eab8a0b4773a233f4d6f252f5e1d70f8460d1979))
+* add contributing guidelines to enhance collaboration and onboarding ([317374e](https://github.com/shrijayan/itwillsync/commit/317374e01704555ce3c5d7901c5c559051364625))
+* add contributing guidelines to improve collaboration and onboarding ([fd50e92](https://github.com/shrijayan/itwillsync/commit/fd50e927d2b89177a2b0af26f22ddc98bc3b11b0))
+* enhance hub URL validation to ensure proper protocol and hostname ([f74c295](https://github.com/shrijayan/itwillsync/commit/f74c29575a8278babf4a43b1f78f765311931837))
+
 ## [1.3.4](https://github.com/shrijayan/itwillsync/compare/v1.3.3...v1.3.4) (2026-03-05)
 
 
