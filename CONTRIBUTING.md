@@ -87,6 +87,10 @@ Running `pnpm build` at the root handles this automatically.
 - Make sure CI passes (tests + build)
 - Write clear commit messages
 
+## Code of Conduct
+
+Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) in all project interactions.
+
 ## Reporting Bugs
 
 Open an [issue](https://github.com/shrijayan/itwillsync/issues) with:
