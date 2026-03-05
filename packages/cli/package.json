@@ -14,7 +14,8 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "cp ../../README.md ."
   },
   "keywords": [
     "agent",
