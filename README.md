@@ -77,7 +77,3 @@ Options:
 ## Works with
 
 Claude Code, Aider, Goose, Codex, Cline, Copilot CLI, or any terminal-based tool.
-
-## License
-
-MIT
