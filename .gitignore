@@ -4,6 +4,9 @@ dist/
 .DS_Store
 coverage/
 
+# Auto-copied at prepack time from root
+packages/cli/README.md
+
 # VitePress
 **/.vitepress/cache/
 
