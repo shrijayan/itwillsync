@@ -1,3 +1,10 @@
+## [1.3.6](https://github.com/shrijayan/itwillsync/compare/v1.3.5...v1.3.6) (2026-03-05)
+
+
+### Bug Fixes
+
+* add coverage directory to .gitignore ([5f58d83](https://github.com/shrijayan/itwillsync/commit/5f58d8321c7cfe4c43c2dba6e02108bf726a3092))
+
 ## [1.3.5](https://github.com/shrijayan/itwillsync/compare/v1.3.4...v1.3.5) (2026-03-05)
 
 
