@@ -14,7 +14,9 @@ When you run multiple coding agents with itwillsync, a hub daemon automatically 
 The hub is a lightweight background process that:
 - Serves the dashboard web UI on port **7962** (SYNC on a phone keypad)
 - Manages a session registry (tracks all active sessions)
+- Persists sessions to disk — survives hub restarts without losing your dashboard
 - Collects live terminal previews from each session
+- Tracks recently used agent commands for quick access
 - Broadcasts updates to all connected dashboard clients
 
 The hub auto-spawns when you start your first session and auto-shuts down 30 seconds after the last session disconnects.
@@ -27,7 +29,7 @@ The dashboard is a mobile-first web app showing:
 - **Status indicators** — active (green), idle (yellow), needs attention (red)
 - **Action buttons** — Open, Rename, Info, Stop
 
-Tap a session card's "Open" button to open the full terminal in a new tab.
+Tap a session card's "Open" button to open the full terminal.
 
 ## Ports
 

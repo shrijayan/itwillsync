@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- **Node.js 20+** (Node 22 recommended for best compatibility with native modules)
+- **Node.js 22+** (Node 24 is not yet supported due to node-pty compatibility)
 - A terminal-based coding agent (Claude Code, Aider, etc.) or just `bash`
 
 ## Quick Run (No Install)
@@ -31,7 +31,7 @@ itwillsync bash
 
 ## Node Version
 
-itwillsync uses [node-pty](https://github.com/nicktaf/node-pty) for terminal emulation, which requires native bindings. Node 22 is recommended. If you use [nvm](https://github.com/nvm-sh/nvm), the project includes an `.nvmrc` file:
+itwillsync uses [node-pty](https://github.com/nicktaf/node-pty) for terminal emulation, which requires native bindings. **Node 22 is required** (Node 24 is not yet supported). If you use [nvm](https://github.com/nvm-sh/nvm), the project includes an `.nvmrc` file:
 
 ```bash
 nvm use  # switches to Node 22

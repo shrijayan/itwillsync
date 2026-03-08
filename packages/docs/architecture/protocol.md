@@ -11,18 +11,19 @@ Used for full terminal I/O. Connects to the session's port with the session toke
 | Message | Fields | Description |
 |---------|--------|-------------|
 | `input` | `{ type: "input", data: string }` | Keyboard input from phone |
-| `resize` | `{ type: "resize", cols: number, rows: number }` | Terminal resize |
-| `resume` | `{ type: "resume", lastSeq: number }` | Request delta sync after reconnect |
+| `resize` | `{ type: "resize", cols: number, rows: number }` | Terminal resize (clamped to `maxTerminalCols`/`maxTerminalRows`) |
+| `sync` | `{ type: "sync", lastSeq: number }` | Request buffer sync after reconnect |
 
 ### Server to Client
 
 | Message | Fields | Description |
 |---------|--------|-------------|
-| `data` | `{ type: "data", data: string, seq: number }` | Terminal output from PTY |
+| `data` | `{ type: "data", data: string, seq?: number }` | Terminal output from PTY |
+| `resize` | `{ type: "resize", cols: number, rows: number }` | PTY resize notification (broadcast to other clients) |
 
-### Delta Sync
+### Buffer Sync
 
-Each `data` message includes a `seq` number — a running character count. When a client reconnects, it sends its last received `seq`. The server responds with only the missed data from its scrollback buffer (50KB).
+Each `data` message includes an optional `seq` number — a running character count. When a client reconnects, it sends a `sync` message with its last received `seq`. The server responds with only the missed data from its scrollback buffer (configurable via `scrollbackBufferSize`, default 10 MB).
 
 ## Dashboard WebSocket (Phone <-> Hub)
 
@@ -47,6 +48,7 @@ Used for real-time session list updates and management. Connects to port 7962 wi
 | `stop-session` | `{ type: "stop-session", sessionId: string }` | Stop a session (sends SIGTERM) |
 | `rename-session` | `{ type: "rename-session", sessionId: string, name: string }` | Rename a session |
 | `get-metadata` | `{ type: "get-metadata", sessionId: string }` | Request session metadata |
+| `clear-attention` | `{ type: "clear-attention", sessionId: string }` | Dismiss attention state for a session |
 
 ## SessionInfo Object
 
