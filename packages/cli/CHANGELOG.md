@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/shrijayan/itwillsync/compare/v1.3.8...v1.4.0) (2026-03-08)
+
+
+### Features
+
+* add mobile resize, scrollback, session persistence and logging ([e2e48e7](https://github.com/shrijayan/itwillsync/commit/e2e48e7d8413158cf48918fe99f485a71618d811))
+
 ## [1.3.8](https://github.com/shrijayan/itwillsync/compare/v1.3.7...v1.3.8) (2026-03-08)
 
 
