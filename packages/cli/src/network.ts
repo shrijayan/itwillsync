@@ -3,30 +3,41 @@ import { createServer } from "node:net";
 import { getTailscaleStatus } from "./tailscale.js";
 import type { NetworkingMode } from "./config.js";
 
+const VIRTUAL_INTERFACE_PREFIXES = [
+  "utun", "tun", "tap", "wg",  // VPN/tunnel
+  "tailscale",                   // Tailscale
+  "docker", "br-", "veth",      // Docker
+  "virbr", "vboxnet", "vmnet",  // VM
+];
+
+function isVirtualInterface(name: string): boolean {
+  return VIRTUAL_INTERFACE_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
 /**
  * Returns the first non-loopback, non-internal IPv4 address found
- * across all network interfaces.
+ * on a physical network interface (skipping VPN/tunnel/VM interfaces).
  *
- * Cross-platform: interface names vary (en0 on macOS, eth0/wlan0 on Linux,
- * Ethernet/Wi-Fi on Windows), but os.networkInterfaces() normalizes them.
- *
- * Falls back to 127.0.0.1 if no suitable address is found.
+ * Falls back to a virtual interface IP, then 127.0.0.1.
  */
 export function getLocalIP(): string {
   const interfaces = networkInterfaces();
+  let fallback: string | null = null;
 
-  for (const addresses of Object.values(interfaces)) {
+  for (const [name, addresses] of Object.entries(interfaces)) {
     if (!addresses) continue;
 
     for (const addr of addresses) {
-      // Skip loopback, internal, and non-IPv4 addresses
-      if (addr.family === "IPv4" && !addr.internal) {
+      if (addr.family !== "IPv4" || addr.internal) continue;
+
+      if (!isVirtualInterface(name)) {
         return addr.address;
       }
+      fallback ??= addr.address;
     }
   }
 
-  return "127.0.0.1";
+  return fallback ?? "127.0.0.1";
 }
 
 /**
