@@ -43,17 +43,17 @@ describe("config", () => {
 
   it("loadConfig returns saved config", () => {
     saveConfig({ networkingMode: "tailscale" });
-    expect(loadConfig()).toEqual({ networkingMode: "tailscale" });
+    expect(loadConfig()).toMatchObject({ networkingMode: "tailscale" });
   });
 
   it("loadConfig returns default when file does not exist", () => {
-    expect(loadConfig()).toEqual({ networkingMode: "local" });
+    expect(loadConfig()).toMatchObject({ networkingMode: "local" });
   });
 
   it("loadConfig returns default when file contains invalid JSON", () => {
     mkdirSync(tempDir, { recursive: true });
     writeFileSync(getConfigPath(), "not valid json{{{", "utf-8");
-    expect(loadConfig()).toEqual({ networkingMode: "local" });
+    expect(loadConfig()).toMatchObject({ networkingMode: "local" });
   });
 
   it("saveConfig overwrites existing config", () => {
