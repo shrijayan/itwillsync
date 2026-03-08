@@ -13,7 +13,17 @@ In-memory store of all active sessions. Uses a `Map<string, SessionInfo>` with E
 - `session-removed` — session unregistered or process died
 - `session-updated` — session renamed or status changed
 
-**Health checks:** Every 15 seconds, the registry verifies each session's process is still alive using `process.kill(pid, 0)`. Dead sessions are automatically removed.
+**Health checks:** Every 15 seconds, the registry verifies each session's process is still alive using `process.kill(pid, 0)`. Dead sessions are automatically removed. Recent heartbeats (≤20s) are trusted over process checks.
+
+### Session Store (`session-store.ts`)
+
+Persists the session registry to `~/.itwillsync/sessions.json`. Saves are debounced (500ms) to avoid excessive disk writes during rapid registration/update cycles.
+
+On hub startup, the store loads persisted sessions and verifies each process is still alive. Dead sessions and sessions older than 24 hours are pruned automatically. This allows sessions to survive hub daemon restarts.
+
+### Tool History (`tool-history.ts`)
+
+Tracks the most recently used agent commands (e.g., `claude`, `aider`, `bash`). Stores up to 20 entries sorted by most-recently-used, persisted to `~/.itwillsync/tool-history.json`. Used by the dashboard for quick-access suggestions.
 
 ### Internal API (`internal-api.ts`)
 
@@ -29,6 +39,9 @@ HTTP server bound to `127.0.0.1:7963`. Only accessible from the local machine. N
 | `/api/sessions/:id/heartbeat` | PUT | Update last-seen timestamp |
 | `/api/sessions/:id/stop` | POST | Send SIGTERM to session |
 | `/api/sessions/:id/rename` | PUT | Rename a session |
+| `/api/tool-history` | GET | Recently used agent commands |
+| `/api/recent-dirs` | GET | Recently used working directories |
+| `/api/browse` | GET | Directory browser (query: `?path=~`) |
 
 ### Dashboard Server (`server.ts`)
 
@@ -55,6 +68,7 @@ First session starts
     ├─► Hub starts:
     │     ├── Generates master token
     │     ├── Writes ~/.itwillsync/hub.json + hub.pid
+    │     ├── Restores persisted sessions (verifies PIDs)
     │     ├── Starts internal API (:7963)
     │     ├── Starts dashboard server (:7962)
     │     ├── Starts preview collector
@@ -76,3 +90,6 @@ Last session disconnects
 | `~/.itwillsync/hub.json` | Master token, ports, PID | Hub daemon | Hub shutdown |
 | `~/.itwillsync/hub.pid` | Hub process ID | Hub daemon | Hub shutdown |
 | `~/.itwillsync/config.json` | Networking preference | Setup wizard | Never (user config) |
+| `~/.itwillsync/sessions.json` | Persisted session registry | Session store | Hub shutdown (pruned on startup) |
+| `~/.itwillsync/tool-history.json` | Recently used agent commands | Tool history | Never (auto-pruned to 20 entries) |
+| `~/.itwillsync/logs/*.log.gz` | Compressed session logs | Session logger (CLI) | After `logRetentionDays` (default: 30) |

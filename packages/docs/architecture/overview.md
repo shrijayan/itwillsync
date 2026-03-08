@@ -8,8 +8,9 @@ Your Machine                              Your Phone
 │                                  │     │                  │
 │  HUB DAEMON (:7962)             │     │  Dashboard       │
 │  ├─ Dashboard server            │◄───►│  (session list)  │
-│  ├─ Session registry            │ WS  │                  │
-│  └─ Preview collector           │     └──────────────────┘
+│  ├─ Session registry + store    │ WS  │                  │
+│  ├─ Preview collector           │     └──────────────────┘
+│  └─ Tool history                │
 │                                  │
 │  SESSION 1 (:7964)              │     ┌──────────────────┐
 │  ├─ PTY (your agent)            │◄───►│  Terminal         │
@@ -39,6 +40,7 @@ packages/
 │       ├── network.ts       IP resolution, port finding
 │       ├── qr.ts            QR code display
 │       ├── config.ts        Config persistence
+│       ├── session-logger.ts Session output logging
 │       ├── tailscale.ts     Tailscale detection
 │       └── wizard.ts        Setup wizard
 ├── hub/           Hub daemon + dashboard
@@ -48,6 +50,8 @@ packages/
 │       ├── internal-api.ts     Localhost REST API
 │       ├── server.ts           Dashboard server
 │       ├── preview-collector.ts  Live preview data
+│       ├── session-store.ts     Session persistence to disk
+│       ├── tool-history.ts      Recently used agent tracking
 │       ├── auth.ts             Token + rate limiting
 │       └── dashboard/          Web UI (vanilla TS)
 ├── web-client/    Browser terminal (xterm.js)
