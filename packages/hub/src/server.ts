@@ -1,11 +1,13 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat, realpath } from "node:fs/promises";
 import { join, extname } from "node:path";
+import { homedir } from "node:os";
 import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import { validateToken, RateLimiter } from "./auth.js";
 import type { SessionRegistry } from "./registry.js";
 import type { PreviewCollector } from "./preview-collector.js";
+import type { ToolHistory } from "./tool-history.js";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -27,6 +29,8 @@ export interface DashboardServerOptions {
   host: string;
   port: number;
   previewCollector?: PreviewCollector;
+  toolHistory?: ToolHistory;
+  onCreateSession?: (tool: string, cwd: string) => void;
 }
 
 /**
@@ -35,7 +39,8 @@ export interface DashboardServerOptions {
  * All requests are authenticated with the master token.
  */
 export function createDashboardServer(options: DashboardServerOptions) {
-  const { registry, masterToken, dashboardPath, host, port, previewCollector } = options;
+  const { registry, masterToken, dashboardPath, host, port, previewCollector, toolHistory, onCreateSession } = options;
+  const homeDir = homedir();
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
   const gzipCache = new Map<string, Buffer>();
@@ -95,6 +100,60 @@ export function createDashboardServer(options: DashboardServerOptions) {
       }));
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ sessions }));
+      return;
+    }
+
+    // Tool history for autocomplete
+    if (pathname === "/api/tool-history") {
+      const tools = toolHistory ? toolHistory.getTools() : [];
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ tools }));
+      return;
+    }
+
+    // Recent working directories from past sessions
+    if (pathname === "/api/recent-dirs") {
+      const dirs = registry.getRecentDirectories();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ dirs }));
+      return;
+    }
+
+    // Directory browser — list subdirectories at a path
+    if (pathname === "/api/browse") {
+      const rawPath = url.searchParams.get("path") || "~";
+      const browsePath = rawPath.replace(/^~/, homeDir);
+
+      try {
+        // Resolve to real path and verify it's under home directory
+        const resolved = await realpath(browsePath);
+        if (!resolved.startsWith(homeDir)) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Access denied" }));
+          return;
+        }
+
+        const dirStat = await stat(resolved);
+        if (!dirStat.isDirectory()) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Not a directory" }));
+          return;
+        }
+
+        const entries = await readdir(resolved, { withFileTypes: true });
+        const dirs = entries
+          .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+          .map((e) => e.name)
+          .sort();
+
+        // Return path relative to home for display
+        const displayPath = resolved.replace(homeDir, "~");
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ path: displayPath, resolvedPath: resolved, entries: dirs }));
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Cannot read directory" }));
+      }
       return;
     }
 
@@ -231,6 +290,40 @@ export function createDashboardServer(options: DashboardServerOptions) {
             const session = registry.getById(msg.sessionId);
             if (session && session.status === "attention") {
               registry.updateStatus(msg.sessionId, "active");
+            }
+            break;
+          }
+
+          case "create-session": {
+            if (!onCreateSession) {
+              ws.send(JSON.stringify({ type: "session-create-error", error: "Session creation not available" }));
+              break;
+            }
+
+            const tool = (msg.tool || "").trim();
+            const rawCwd = (msg.cwd || "").trim();
+
+            if (!tool) {
+              ws.send(JSON.stringify({ type: "session-create-error", error: "Tool name is required" }));
+              break;
+            }
+
+            // Resolve ~ to home directory
+            const cwd = rawCwd ? rawCwd.replace(/^~/, homeDir) : homeDir;
+
+            try {
+              // Verify directory exists
+              const resolved = await realpath(cwd);
+              const dirStat = await stat(resolved);
+              if (!dirStat.isDirectory()) {
+                ws.send(JSON.stringify({ type: "session-create-error", error: "Not a directory" }));
+                break;
+              }
+
+              ws.send(JSON.stringify({ type: "session-creating", tool, cwd: rawCwd || "~" }));
+              onCreateSession(tool, resolved);
+            } catch (err) {
+              ws.send(JSON.stringify({ type: "session-create-error", error: (err as Error).message }));
             }
             break;
           }

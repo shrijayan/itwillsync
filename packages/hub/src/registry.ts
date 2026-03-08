@@ -183,6 +183,33 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
     }
   }
 
+  /** Get deduplicated recent working directories from current + persisted sessions. */
+  getRecentDirectories(): string[] {
+    const dirMap = new Map<string, number>(); // cwd → most recent timestamp
+
+    // Current sessions
+    for (const s of this.sessions.values()) {
+      const existing = dirMap.get(s.cwd) ?? 0;
+      if (s.lastSeen > existing) {
+        dirMap.set(s.cwd, s.lastSeen);
+      }
+    }
+
+    // Persisted sessions (includes ended ones)
+    if (this.store) {
+      for (const s of this.store.getAllSessions()) {
+        const existing = dirMap.get(s.cwd) ?? 0;
+        if (s.lastSeen > existing) {
+          dirMap.set(s.cwd, s.lastSeen);
+        }
+      }
+    }
+
+    return Array.from(dirMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([cwd]) => cwd);
+  }
+
   clear(): void {
     const ids = Array.from(this.sessions.keys());
     this.sessions.clear();
