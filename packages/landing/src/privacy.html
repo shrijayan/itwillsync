@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="itwillsync Privacy Policy — Zero analytics, zero cloud, zero tracking. Your terminal data never leaves your local network.">
+
+  <meta property="og:title" content="Privacy Policy — itwillsync">
+  <meta property="og:description" content="Zero analytics, zero cloud, zero tracking. Your terminal data never leaves your local network.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://shrijayan.github.io/itwillsync/privacy.html">
+
+  <title>Privacy Policy — itwillsync</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .privacy {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 120px var(--page-pad) 80px;
+    }
+
+    .privacy h1 {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .privacy .effective-date {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      margin-bottom: 48px;
+    }
+
+    .privacy h2 {
+      font-family: var(--font-sans);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 40px;
+      margin-bottom: 12px;
+    }
+
+    .privacy p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .privacy ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 16px;
+    }
+
+    .privacy ul li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    .privacy ul li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: var(--text-tertiary);
+    }
+
+    .privacy a {
+      color: var(--accent);
+      transition: opacity 0.2s;
+    }
+    .privacy a:hover {
+      opacity: 0.8;
+    }
+
+    .privacy .highlight-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+
+    .privacy .highlight-box p {
+      margin-bottom: 0;
+    }
+
+    .privacy code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    @media (max-width: 767px) {
+      .privacy {
+        padding-top: 88px;
+        padding-bottom: 60px;
+      }
+      .privacy h1 {
+        font-size: 24px;
+      }
+      .privacy h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="./" class="nav-logo">itwillsync</a>
+      <div class="nav-links">
+        <a href="https://shrijayan.github.io/itwillsync/docs/" class="nav-link">Docs</a>
+        <a href="https://github.com/shrijayan/itwillsync" class="nav-link" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/itwillsync" class="nav-link nav-link--npm" target="_blank" rel="noopener">npm</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Background atmosphere -->
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
+
+  <!-- Privacy Policy Content -->
+  <main class="privacy">
+    <h1>Privacy Policy</h1>
+    <p class="effective-date">Effective date: March 8, 2026</p>
+
+    <h2>1. What itwillsync Is</h2>
+    <p>itwillsync is an open-source tool that syncs any terminal-based coding agent to your phone over your local network. It connects directly from your phone to your computer — no accounts, no cloud, no sign-up required.</p>
+
+    <h2>2. Data Stored on Your Device</h2>
+    <p>itwillsync stores minimal configuration locally. None of this data is sent to cpluz or any third party.</p>
+    <ul>
+      <li><strong>Networking preference</strong> — your chosen mode (local WiFi or Tailscale), stored in <code>~/.itwillsync/config.json</code></li>
+      <li><strong>Temporary hub file</strong> — <code>hub.json</code> contains a random authentication token and port info while itwillsync is running. Automatically deleted on shutdown</li>
+    </ul>
+    <p>All other data (terminal output, session metadata, authentication tokens) exists only in memory and is cleared when the session ends.</p>
+
+    <h2>3. Data in Transit</h2>
+    <p>When you connect your phone to itwillsync, all traffic stays on your local network. Nothing is relayed through external infrastructure.</p>
+    <ul>
+      <li>Terminal I/O travels over WebSocket within your local WiFi or your own Tailscale VPN</li>
+      <li>Connections go point-to-point from your phone to your computer</li>
+      <li>No data is sent to cpluz servers, cloud services, or any third party</li>
+    </ul>
+
+    <div class="highlight-box">
+      <p>itwillsync is architecturally incapable of sending your data externally. There are no outbound network calls, no cloud endpoints, and no telemetry infrastructure in the codebase. You can verify this yourself — the source is fully open on <a href="https://github.com/shrijayan/itwillsync" target="_blank" rel="noopener">GitHub</a>.</p>
+    </div>
+
+    <h2>4. Authentication</h2>
+    <p>itwillsync uses cryptographically random 256-bit tokens to secure connections between your phone and computer. These tokens are:</p>
+    <ul>
+      <li>Generated locally using Node.js crypto APIs</li>
+      <li>Stored only in memory (and briefly in a temporary file for reconnection)</li>
+      <li>Validated using constant-time comparison to prevent timing attacks</li>
+      <li>Protected by rate limiting — 5 failed attempts trigger a 60-second IP lockout</li>
+    </ul>
+
+    <h2>5. What We Do NOT Collect</h2>
+    <p>This list is exhaustive. We collect none of the following:</p>
+    <ul>
+      <li>No analytics or telemetry of any kind</li>
+      <li>No crash reporting</li>
+      <li>No user accounts or email addresses</li>
+      <li>No cloud sync</li>
+      <li>No advertising or ad tracking</li>
+      <li>No location data</li>
+      <li>No usage statistics</li>
+      <li>No third-party SDKs, services, or tracking pixels</li>
+      <li>No server-side storage of your terminal sessions or commands</li>
+    </ul>
+
+    <h2>6. Data Retention &amp; Cleanup</h2>
+    <p>itwillsync is designed for automatic cleanup:</p>
+    <ul>
+      <li>The hub daemon auto-shuts down 30 seconds after the last session ends</li>
+      <li>All session data (terminal output, tokens, metadata) is cleared from memory on shutdown</li>
+      <li>Temporary files (<code>hub.json</code>, <code>hub.pid</code>) are deleted automatically</li>
+      <li>The only persistent file is <code>~/.itwillsync/config.json</code> — delete it manually or uninstall the package to remove it</li>
+    </ul>
+
+    <h2>7. Open Source Transparency</h2>
+    <p>itwillsync is MIT-licensed and fully open source. Every line of code is auditable on <a href="https://github.com/shrijayan/itwillsync" target="_blank" rel="noopener">GitHub</a>. We believe the best privacy policy is one you can verify in the source code.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>itwillsync is not directed at children under 13. We do not collect personal information from anyone, including children. Since itwillsync does not collect any data, there is no risk of inadvertent collection from minors.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. Changes will be posted on this page with an updated effective date. Since itwillsync collects no data, changes are unlikely to be material.</p>
+
+    <h2>10. Contact</h2>
+    <p>cpluz<br>Email: <a href="mailto:info@cpluz.com">info@cpluz.com</a></p>
+    <p>If you have questions about this privacy policy or how itwillsync handles your data, reach out any time.</p>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-copyright">MIT License.</span>
+      <div class="footer-links">
+        <a href="https://shrijayan.github.io/itwillsync/docs/" target="_blank" rel="noopener">Docs</a>
+        <a href="https://github.com/shrijayan/itwillsync" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/package/itwillsync" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/shrijayan/itwillsync/issues" target="_blank" rel="noopener">Issues</a>
+        <a href="./privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

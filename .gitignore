@@ -7,6 +7,9 @@ coverage/
 # Auto-copied at prepack time from root
 packages/cli/README.md
 
+# Worktrees
+.worktrees/
+
 # VitePress
 **/.vitepress/cache/
 
