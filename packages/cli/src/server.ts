@@ -4,6 +4,7 @@ import { join, extname } from "node:path";
 import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import type { PtyManager } from "./pty-manager.js";
+import type { SessionLogger } from "./session-logger.js";
 import { validateToken } from "./auth.js";
 
 /** MIME type mapping for static file serving. */
@@ -17,19 +18,27 @@ const MIME_TYPES: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
+export type ResizePolicy = "local-only" | "last-writer-wins";
+
 export interface SyncServerOptions {
   ptyManager: PtyManager;
   token: string;
   webClientPath: string;
   host: string;
   port: number;
-  localTerminalOwnsResize?: boolean;
+  resizePolicy?: ResizePolicy;
+  scrollbackBufferSize?: number;
+  clientBufferLimit?: number;
+  logger?: SessionLogger;
 }
 
 export interface SyncServer {
   httpServer: ReturnType<typeof createServer>;
   wssServer: WebSocketServer;
   close(): void;
+  /** Resize from the local terminal (always applied, broadcasts to web clients). */
+  resizeFromLocal(cols: number, rows: number): void;
+  /** @deprecated Use resizeFromLocal instead */
   broadcastResize(cols: number, rows: number): void;
 }
 
@@ -89,18 +98,26 @@ async function serveStaticFile(
  * The HTTP server serves the static web client.
  * The WebSocket server handles authenticated terminal I/O forwarding.
  */
-const PING_INTERVAL_MS = 30_000; // Send ping every 30s to keep connections alive
-const PONG_TIMEOUT_MS = 10_000; // Close connection if no pong within 10s
-const SCROLLBACK_BUFFER_SIZE = 50_000; // Characters to buffer for reconnecting clients
+const PING_INTERVAL_MS = 30_000;
+const DEFAULT_SCROLLBACK_SIZE = 10_485_760; // 10MB
+const DEFAULT_CLIENT_BUFFER_LIMIT = 262_144; // 256KB
 
 export function createSyncServer(options: SyncServerOptions): SyncServer {
-  const { ptyManager, token, webClientPath, host, port, localTerminalOwnsResize = false } = options;
+  const {
+    ptyManager, token, webClientPath, host, port,
+    resizePolicy = "last-writer-wins",
+    scrollbackBufferSize = DEFAULT_SCROLLBACK_SIZE,
+    clientBufferLimit = DEFAULT_CLIENT_BUFFER_LIMIT,
+    logger,
+  } = options;
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
+  const dropCounters = new WeakMap<WebSocket, number>();
 
   // Scrollback buffer: stores recent PTY output so reconnecting clients can catch up.
   // `seq` is a running character count — clients track it to request delta sync on reconnect.
   let scrollbackBuffer = "";
+  let scrollbackBytes = 0;
   let seq = 0;
 
   // --- HTTP Server ---
@@ -180,8 +197,17 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
           typeof message.cols === "number" &&
           typeof message.rows === "number"
         ) {
-          if (!localTerminalOwnsResize) {
+          if (resizePolicy === "last-writer-wins") {
             ptyManager.resize(message.cols, message.rows);
+            // Broadcast confirmed dimensions to ALL clients (including sender).
+            // The sender needs confirmation because the server sent its old PTY
+            // dims on connect, which the client may have already applied.
+            const resizeMsg = JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows });
+            for (const c of clients) {
+              if (c.readyState === c.OPEN) {
+                c.send(resizeMsg);
+              }
+            }
           }
         } else if (message.type === "resume" && typeof message.lastSeq === "number") {
           // Delta sync: send only the data the client missed since lastSeq
@@ -209,18 +235,39 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
 
   // Forward PTY output to all connected WebSocket clients
   ptyManager.onData((data: string) => {
-    // Buffer output for reconnecting clients
+    // Log to disk if logger is configured
+    if (logger) logger.write(data);
+
+    // Buffer output for reconnecting clients (byte-based trimming)
     seq += data.length;
     scrollbackBuffer += data;
-    if (scrollbackBuffer.length > SCROLLBACK_BUFFER_SIZE) {
-      scrollbackBuffer = scrollbackBuffer.slice(-SCROLLBACK_BUFFER_SIZE);
+    scrollbackBytes += Buffer.byteLength(data, "utf-8");
+    if (scrollbackBytes > scrollbackBufferSize) {
+      // Trim to ~half the limit to avoid trimming on every chunk
+      const target = Math.floor(scrollbackBufferSize * 0.5);
+      while (scrollbackBytes > target && scrollbackBuffer.length > 0) {
+        const trimChars = Math.min(4096, scrollbackBuffer.length);
+        const trimmed = scrollbackBuffer.slice(0, trimChars);
+        scrollbackBytes -= Buffer.byteLength(trimmed, "utf-8");
+        scrollbackBuffer = scrollbackBuffer.slice(trimChars);
+      }
     }
 
     const msg = JSON.stringify({ type: "data", data, seq });
     for (const client of clients) {
-      if (client.readyState === client.OPEN) {
-        client.send(msg);
+      if (client.readyState !== client.OPEN) continue;
+
+      // Non-blocking: skip send if client's kernel buffer is full
+      if (client.bufferedAmount > clientBufferLimit) {
+        const count = (dropCounters.get(client) || 0) + 1;
+        dropCounters.set(client, count);
+        if (count === 100 || (count > 100 && count % 1000 === 0)) {
+          console.warn(`  Warning: Dropped ${count} messages for slow client`);
+        }
+        continue;
       }
+
+      client.send(msg);
     }
   });
 
@@ -244,13 +291,18 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       wssServer.close();
       httpServer.close();
     },
-    broadcastResize(cols: number, rows: number) {
-      const msg = JSON.stringify({ type: "resize", cols, rows });
+    resizeFromLocal(cols: number, rows: number) {
+      ptyManager.resize(cols, rows);
+      const msg = JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows });
       for (const client of clients) {
         if (client.readyState === client.OPEN) {
           client.send(msg);
         }
       }
+    },
+    broadcastResize(cols: number, rows: number) {
+      // Backward compat — delegates to resizeFromLocal
+      this.resizeFromLocal(cols, rows);
     },
   };
 }

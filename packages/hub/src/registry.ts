@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import { randomBytes } from "node:crypto";
+import type { SessionStore, PersistedSession } from "./session-store.js";
 
 export interface SessionInfo {
   id: string;
@@ -29,11 +30,53 @@ interface RegistryEvents {
   "session-updated": [session: SessionInfo];
 }
 
+export interface RegistryOptions {
+  maxSessions?: number;
+  store?: SessionStore;
+}
+
 export class SessionRegistry extends EventEmitter<RegistryEvents> {
   private sessions = new Map<string, SessionInfo>();
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private maxSessions: number;
+  private store: SessionStore | null;
+
+  constructor(options: RegistryOptions = {}) {
+    super();
+    this.maxSessions = options.maxSessions ?? 20;
+    this.store = options.store ?? null;
+
+    // Restore alive sessions from disk
+    if (this.store) {
+      const alive = this.store.loadAndMarkStale();
+      for (const s of alive) {
+        this.sessions.set(s.id, {
+          id: s.id,
+          name: s.name,
+          port: s.port,
+          token: s.token,
+          agent: s.agent,
+          cwd: s.cwd,
+          pid: s.pid,
+          connectedAt: s.connectedAt,
+          lastSeen: s.lastSeen,
+          status: s.status === "ended" ? "idle" : s.status as SessionInfo["status"],
+        });
+      }
+    }
+  }
+
+  private persistSessions(): void {
+    if (!this.store) return;
+    const sessions: PersistedSession[] = this.getAll().map((s) => ({ ...s }));
+    this.store.save(sessions);
+  }
 
   register(registration: SessionRegistration): SessionInfo {
+    if (this.sessions.size >= this.maxSessions) {
+      throw new Error(`Maximum sessions reached (${this.maxSessions})`);
+    }
+
     const id = randomBytes(8).toString("hex");
     const now = Date.now();
 
@@ -47,6 +90,7 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
 
     this.sessions.set(id, session);
     this.emit("session-added", session);
+    this.persistSessions();
     return session;
   }
 
@@ -54,6 +98,7 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
     const existed = this.sessions.delete(id);
     if (existed) {
       this.emit("session-removed", id);
+      this.persistSessions();
     }
     return existed;
   }
@@ -93,6 +138,7 @@ export class SessionRegistry extends EventEmitter<RegistryEvents> {
     if (session) {
       session.status = status;
       this.emit("session-updated", session);
+      this.persistSessions();
     }
   }
 

@@ -113,9 +113,11 @@ export class PtyManager {
    */
   resize(cols: number, rows: number): void {
     try {
-      this.ptyProcess.resize(cols, rows);
-      this._cols = cols;
-      this._rows = rows;
+      const clampedCols = Math.max(1, Math.min(500, Math.floor(cols)));
+      const clampedRows = Math.max(1, Math.min(200, Math.floor(rows)));
+      this.ptyProcess.resize(clampedCols, clampedRows);
+      this._cols = clampedCols;
+      this._rows = clampedRows;
     } catch {
       // Process may have already exited; ignore resize errors
     }

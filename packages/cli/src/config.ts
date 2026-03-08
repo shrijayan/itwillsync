@@ -6,13 +6,27 @@ export type NetworkingMode = "local" | "tailscale";
 
 export interface Config {
   networkingMode: NetworkingMode;
+  scrollbackBufferSize?: number;
+  maxSessions?: number;
+  idleTimeoutMs?: number;
+  logRetentionDays?: number;
+  clientBufferLimit?: number;
+  maxTerminalCols?: number;
+  maxTerminalRows?: number;
 }
 
 const DEFAULT_CONFIG: Config = {
   networkingMode: "local",
+  scrollbackBufferSize: 10_485_760,   // 10MB
+  maxSessions: 20,
+  idleTimeoutMs: 86_400_000,          // 24 hours
+  logRetentionDays: 30,
+  clientBufferLimit: 262_144,          // 256KB
+  maxTerminalCols: 500,
+  maxTerminalRows: 200,
 };
 
-function getConfigDir(): string {
+export function getConfigDir(): string {
   return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
 }
 

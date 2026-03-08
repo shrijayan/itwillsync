@@ -4,6 +4,7 @@ import { findAvailablePort, resolveSessionIP } from "./network.js";
 import { createSyncServer } from "./server.js";
 import { displayQR } from "./qr.js";
 import { configExists, loadConfig, type NetworkingMode } from "./config.js";
+import { SessionLogger } from "./session-logger.js";
 import { runSetupWizard } from "./wizard.js";
 import { parseArgs, printHelp } from "./cli-options.js";
 import {
@@ -195,6 +196,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Load config
+  const config = loadConfig();
+
   // Determine networking mode: CLI flag > saved config > default
   let networkingMode: NetworkingMode = "local";
   if (options.tailscale) {
@@ -202,7 +206,6 @@ async function main(): Promise<void> {
   } else if (options.local) {
     networkingMode = "local";
   } else {
-    const config = loadConfig();
     networkingMode = config.networkingMode;
   }
 
@@ -230,6 +233,10 @@ async function main(): Promise<void> {
   // Create PTY
   const ptyManager = new PtyManager(cmd, cmdArgs);
 
+  // Create session logger (uses a timestamp-based ID since hub registration happens later)
+  const sessionId = `${cmd}-${Date.now().toString(36)}`;
+  const sessionLogger = new SessionLogger(sessionId);
+
   // Create session server
   const server = createSyncServer({
     ptyManager,
@@ -237,7 +244,10 @@ async function main(): Promise<void> {
     webClientPath,
     host,
     port,
-    localTerminalOwnsResize: true,
+    resizePolicy: "last-writer-wins",
+    scrollbackBufferSize: config.scrollbackBufferSize,
+    clientBufferLimit: config.clientBufferLimit,
+    logger: sessionLogger,
   });
 
   // Register with hub
@@ -313,11 +323,10 @@ async function main(): Promise<void> {
     process.stdout.write(data);
   });
 
-  // Handle terminal resize
+  // Handle terminal resize — resizes PTY and broadcasts to all web clients
   function handleResize(): void {
     if (process.stdout.columns && process.stdout.rows) {
-      ptyManager.resize(process.stdout.columns, process.stdout.rows);
-      server.broadcastResize(process.stdout.columns, process.stdout.rows);
+      server.resizeFromLocal(process.stdout.columns, process.stdout.rows);
     }
   }
 
@@ -357,6 +366,7 @@ async function main(): Promise<void> {
     sleepGuard?.kill();
     server.close();
     ptyManager.kill();
+    await sessionLogger.close();
   }
 
   ptyManager.onExit(async (exitCode) => {

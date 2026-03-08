@@ -1,9 +1,10 @@
-import { writeFileSync, mkdirSync, unlinkSync, existsSync } from "node:fs";
+import { writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateToken } from "./auth.js";
 import { SessionRegistry } from "./registry.js";
+import { SessionStore } from "./session-store.js";
 import { createInternalApi } from "./internal-api.js";
 import { createDashboardServer } from "./server.js";
 import { PreviewCollector } from "./preview-collector.js";
@@ -50,9 +51,26 @@ async function main(): Promise<void> {
   };
   writeFileSync(getHubConfigPath(), JSON.stringify(hubConfig, null, 2) + "\n", "utf-8");
 
-  // Create session registry
-  const registry = new SessionRegistry();
+  // Create session store + registry
+  const sessionStore = new SessionStore();
+  const registry = new SessionRegistry({ store: sessionStore });
   registry.startHealthChecks();
+
+  // Clean up old session logs (default: 30 days retention)
+  const logsDir = join(hubDir, "logs");
+  if (existsSync(logsDir)) {
+    const retentionMs = 30 * 86_400_000;
+    const cutoff = Date.now() - retentionMs;
+    try {
+      for (const file of readdirSync(logsDir)) {
+        const filePath = join(logsDir, file);
+        try {
+          const stat = statSync(filePath);
+          if (stat.mtimeMs < cutoff) unlinkSync(filePath);
+        } catch {}
+      }
+    } catch {}
+  }
 
   // Resolve path to the built dashboard
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -120,6 +138,7 @@ async function main(): Promise<void> {
   function cleanup(): void {
     previewCollector.close();
     registry.stopHealthChecks();
+    sessionStore.flush();
     registry.clear();
     internalApi.close();
     dashboardServer.close();

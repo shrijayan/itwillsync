@@ -65,7 +65,14 @@ export function createInternalApi(options: InternalApiOptions) {
           return;
         }
 
-        const session = registry.register(data);
+        let session;
+        try {
+          session = registry.register(data);
+        } catch (err) {
+          res.writeHead(503);
+          res.end(JSON.stringify({ error: (err as Error).message }));
+          return;
+        }
         res.writeHead(201);
         res.end(JSON.stringify({ session }));
         return;
