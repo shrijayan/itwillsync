@@ -26,6 +26,51 @@
     </div>
   </main>
 
+  <!-- FAB: Create Session -->
+  <button id="fab-create" aria-label="New session">+</button>
+
+  <!-- Create Session Modal -->
+  <div id="create-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-title">New Session</span>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+
+      <!-- View: Create Form -->
+      <div id="create-form-view">
+        <label class="form-label">Tool</label>
+        <input type="text" id="tool-input" class="form-input" placeholder="e.g. claude, aider, bash" autocomplete="off" autocapitalize="off" />
+        <div id="tool-chips" class="chip-row"></div>
+
+        <label class="form-label">Working Directory</label>
+        <div id="dir-selected" class="dir-display">~</div>
+        <div class="dir-actions">
+          <button class="dir-action-btn" id="btn-browse">Browse...</button>
+        </div>
+
+        <div id="create-error" class="create-error hidden"></div>
+        <button id="btn-create-session" class="btn-create" disabled>Create Session</button>
+      </div>
+
+      <!-- View: Directory Browser -->
+      <div id="browse-view" class="hidden">
+        <div class="browse-header">
+          <button class="browse-back" id="browse-back">&larr; Back</button>
+          <button class="browse-select" id="browse-select">Select this folder</button>
+        </div>
+        <div id="browse-breadcrumb" class="browse-breadcrumb"></div>
+        <div id="browse-list" class="browse-list"></div>
+      </div>
+
+      <!-- Loading spinner shown during session creation -->
+      <div id="create-spinner" class="create-spinner hidden">
+        <div class="spinner"></div>
+        <span>Creating session...</span>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./main.ts"></script>
 </body>
 </html>

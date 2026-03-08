@@ -22,6 +22,7 @@ export interface CliOptions {
   hubInfo: boolean;
   hubStop: boolean;
   hubStatus: boolean;
+  headless: boolean;
 }
 
 export function parseArgs(argv: string[]): CliOptions {
@@ -36,6 +37,7 @@ export function parseArgs(argv: string[]): CliOptions {
     hubInfo: false,
     hubStop: false,
     hubStatus: false,
+    headless: false,
   };
 
   const args = argv.slice(2);
@@ -88,6 +90,9 @@ export function parseArgs(argv: string[]): CliOptions {
       i++;
     } else if (arg === "--hub-status") {
       options.hubStatus = true;
+      i++;
+    } else if (arg === "--headless") {
+      options.headless = true;
       i++;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();

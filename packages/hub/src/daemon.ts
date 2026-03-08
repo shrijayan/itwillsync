@@ -2,9 +2,11 @@ import { writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync, statSync
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawn, type ChildProcess } from "node:child_process";
 import { generateToken } from "./auth.js";
 import { SessionRegistry } from "./registry.js";
 import { SessionStore } from "./session-store.js";
+import { ToolHistory } from "./tool-history.js";
 import { createInternalApi } from "./internal-api.js";
 import { createDashboardServer } from "./server.js";
 import { PreviewCollector } from "./preview-collector.js";
@@ -28,6 +30,30 @@ function getPidPath(): string {
 
 function getHubConfigPath(): string {
   return join(getHubDir(), "hub.json");
+}
+
+/** Validate a tool name: alphanumeric, hyphens, underscores, dots only. */
+function isValidToolName(tool: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(tool) && tool.length > 0 && tool.length <= 100;
+}
+
+/**
+ * Spawn a new headless CLI session.
+ * The CLI process registers with the hub as usual.
+ */
+function spawnSession(
+  tool: string,
+  cwd: string,
+  cliEntryPath: string,
+): ChildProcess {
+  const child = spawn(process.execPath, [cliEntryPath, "--headless", "--", tool], {
+    cwd,
+    stdio: "ignore",
+    detached: true,
+    env: { ...process.env },
+  });
+  child.unref();
+  return child;
 }
 
 async function main(): Promise<void> {
@@ -56,6 +82,9 @@ async function main(): Promise<void> {
   const registry = new SessionRegistry({ store: sessionStore });
   registry.startHealthChecks();
 
+  // Tool history for autocomplete
+  const toolHistory = new ToolHistory();
+
   // Clean up old session logs (default: 30 days retention)
   const logsDir = join(hubDir, "logs");
   if (existsSync(logsDir)) {
@@ -72,9 +101,11 @@ async function main(): Promise<void> {
     } catch {}
   }
 
-  // Resolve path to the built dashboard
+  // Resolve paths
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const dashboardPath = join(__dirname, "dashboard");
+  // Hub lives at dist/hub/daemon.js, CLI entry is at dist/index.js
+  const cliEntryPath = join(__dirname, "..", "index.js");
 
   // Start internal API (localhost only)
   const internalApi = createInternalApi({
@@ -93,6 +124,14 @@ async function main(): Promise<void> {
     host: "0.0.0.0",
     port: HUB_EXTERNAL_PORT,
     previewCollector,
+    toolHistory,
+    onCreateSession: (tool: string, cwd: string) => {
+      if (!isValidToolName(tool)) {
+        throw new Error(`Invalid tool name: ${tool}`);
+      }
+      toolHistory.recordUsage(tool);
+      spawnSession(tool, cwd, cliEntryPath);
+    },
   });
 
   // Wait for both servers to actually bind to their ports

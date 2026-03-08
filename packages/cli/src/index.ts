@@ -186,7 +186,7 @@ async function main(): Promise<void> {
   }
 
   // First-run: trigger wizard if no config exists and no override flags
-  if (!configExists() && !options.tailscale && !options.local && process.stdin.isTTY) {
+  if (!options.headless && !configExists() && !options.tailscale && !options.local && process.stdin.isTTY) {
     await runSetupWizard();
   }
 
@@ -195,6 +195,8 @@ async function main(): Promise<void> {
     printHelp();
     process.exit(1);
   }
+
+  const headless = options.headless;
 
   // Load config
   const config = loadConfig();
@@ -276,89 +278,85 @@ async function main(): Promise<void> {
     }
   }
 
-  // Display connection info
-  const dashboardUrl = hubConfig
-    ? `http://${ip}:${HUB_EXTERNAL_PORT}?token=${hubConfig.masterToken}`
-    : null;
+  // Display connection info (skip in headless mode)
+  let sleepGuard: ChildProcess | null = null;
 
-  if (dashboardUrl && !options.noQr) {
-    // Show QR pointing to dashboard
-    if (!isFirstSession) {
+  if (!headless) {
+    const dashboardUrl = hubConfig
+      ? `http://${ip}:${HUB_EXTERNAL_PORT}?token=${hubConfig.masterToken}`
+      : null;
+
+    if (dashboardUrl && !options.noQr) {
+      if (!isFirstSession) {
+        console.log(`\n  Session "${cmd}" registered with hub.`);
+      }
+      displayQR(dashboardUrl);
+    } else if (dashboardUrl) {
       console.log(`\n  Session "${cmd}" registered with hub.`);
+      console.log(`  Dashboard: ${dashboardUrl}`);
+      console.log("");
+    } else if (!options.noQr) {
+      const directUrl = `http://${ip}:${port}?token=${token}`;
+      displayQR(directUrl);
     }
-    displayQR(dashboardUrl);
-  } else if (dashboardUrl) {
-    // QR disabled — text only
-    console.log(`\n  Session "${cmd}" registered with hub.`);
-    console.log(`  Dashboard: ${dashboardUrl}`);
+
+    sleepGuard = preventSleep();
+
+    console.log(`  Server listening on ${host}:${port}`);
+    console.log(`  Running: ${options.command.join(" ")}`);
+    console.log(`  PID: ${ptyManager.pid}`);
+    console.log(`  Sleep prevention: ${sleepGuard ? "active" : "unavailable"}`);
     console.log("");
-  } else if (!options.noQr) {
-    // No hub — show direct session URL
-    const directUrl = `http://${ip}:${port}?token=${token}`;
-    displayQR(directUrl);
-  }
 
-  // Prevent laptop from sleeping during session
-  const sleepGuard = preventSleep();
+    // Pipe local terminal I/O to/from the PTY
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+    }
+    process.stdin.resume();
+    process.stdin.setEncoding("utf-8");
 
-  console.log(`  Server listening on ${host}:${port}`);
-  console.log(`  Running: ${options.command.join(" ")}`);
-  console.log(`  PID: ${ptyManager.pid}`);
-  console.log(`  Sleep prevention: ${sleepGuard ? "active" : "unavailable"}`);
-  console.log("");
+    process.stdin.on("data", (data: string) => {
+      if (process.stdout.columns && process.stdout.rows) {
+        if (process.stdout.columns !== ptyManager.cols || process.stdout.rows !== ptyManager.rows) {
+          server.resizeFromLocal(process.stdout.columns, process.stdout.rows);
+        }
+      }
+      ptyManager.write(data);
+    });
 
-  // Pipe local terminal I/O to/from the PTY
-  // This lets the user interact with the agent locally too
-  if (process.stdin.isTTY) {
-    process.stdin.setRawMode(true);
-  }
-  process.stdin.resume();
-  process.stdin.setEncoding("utf-8");
+    ptyManager.onData((data: string) => {
+      process.stdout.write(data);
+    });
 
-  process.stdin.on("data", (data: string) => {
-    // Auto-resize PTY to match local terminal when user types locally.
-    // Handles the case where a phone resized the PTY smaller,
-    // and the user returns to the laptop without resizing the window.
-    if (process.stdout.columns && process.stdout.rows) {
-      if (process.stdout.columns !== ptyManager.cols || process.stdout.rows !== ptyManager.rows) {
+    // Handle terminal resize
+    function handleResize(): void {
+      if (process.stdout.columns && process.stdout.rows) {
         server.resizeFromLocal(process.stdout.columns, process.stdout.rows);
       }
     }
-    ptyManager.write(data);
-  });
 
-  ptyManager.onData((data: string) => {
-    process.stdout.write(data);
-  });
-
-  // Handle terminal resize — resizes PTY and broadcasts to all web clients
-  function handleResize(): void {
-    if (process.stdout.columns && process.stdout.rows) {
-      server.resizeFromLocal(process.stdout.columns, process.stdout.rows);
-    }
+    process.stdout.on("resize", handleResize);
+    handleResize();
   }
-
-  process.stdout.on("resize", handleResize);
-  handleResize();
 
   // Clean shutdown
   async function cleanup(): Promise<void> {
-    // Restore terminal state that the child process may have modified.
-    // Agents like Codex enable kitty keyboard protocol, bracketed paste,
-    // mouse tracking etc. — if killed abruptly they don't get to reset these.
-    process.stdout.write(
-      "\x1b[>0u" +        // Reset kitty keyboard protocol to default
-      "\x1b[?2004l" +     // Disable bracketed paste mode
-      "\x1b[?1000l" +     // Disable mouse click tracking
-      "\x1b[?1002l" +     // Disable mouse button tracking
-      "\x1b[?1003l" +     // Disable mouse all-motion tracking
-      "\x1b[?1006l" +     // Disable SGR mouse encoding
-      "\x1b[?25h" +       // Show cursor (in case it was hidden)
-      "\x1b[?1049l"       // Exit alternate screen buffer (if active)
-    );
+    if (!headless) {
+      // Restore terminal state that the child process may have modified.
+      process.stdout.write(
+        "\x1b[>0u" +        // Reset kitty keyboard protocol to default
+        "\x1b[?2004l" +     // Disable bracketed paste mode
+        "\x1b[?1000l" +     // Disable mouse click tracking
+        "\x1b[?1002l" +     // Disable mouse button tracking
+        "\x1b[?1003l" +     // Disable mouse all-motion tracking
+        "\x1b[?1006l" +     // Disable SGR mouse encoding
+        "\x1b[?25h" +       // Show cursor (in case it was hidden)
+        "\x1b[?1049l"       // Exit alternate screen buffer (if active)
+      );
 
-    if (process.stdin.isTTY) {
-      process.stdin.setRawMode(false);
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
     }
 
     // Stop heartbeat

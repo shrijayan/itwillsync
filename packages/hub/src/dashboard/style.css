@@ -453,3 +453,352 @@ html, body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* --- FAB Button --- */
+
+#fab-create {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e94560;
+  color: white;
+  font-size: 28px;
+  font-weight: 300;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(233, 69, 96, 0.4);
+  z-index: 20;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#fab-create:active {
+  transform: scale(0.92);
+}
+
+/* --- Modal Overlay --- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.85);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #16213e;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #707090;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+/* --- Form Elements --- */
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #a0a0b0;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+
+.form-label:first-of-type {
+  margin-top: 0;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #111122;
+  border: 1px solid #2a2a44;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 15px;
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  border-color: #e94560;
+}
+
+.form-input.hidden {
+  display: none;
+}
+
+/* --- Chips --- */
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 12px;
+  background: #1e1e36;
+  border: 1px solid #2a2a44;
+  border-radius: 16px;
+  font-size: 12px;
+  color: #c0c0d0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+}
+
+.chip:active,
+.chip.selected {
+  background: rgba(233, 69, 96, 0.15);
+  border-color: #e94560;
+  color: #e94560;
+}
+
+/* --- Directory Display --- */
+
+.dir-display {
+  padding: 10px 12px;
+  background: #111122;
+  border: 1px solid #2a2a44;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+  color: #c0c0d0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dir-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dir-action-btn {
+  flex: 1;
+  padding: 8px 0;
+  background: #1e1e36;
+  border: 1px solid #2a2a44;
+  border-radius: 8px;
+  color: #a0a0b0;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+
+.dir-action-btn:active {
+  background: #2a2a44;
+}
+
+/* --- Create Button --- */
+
+.btn-create {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: #e94560;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+
+.btn-create:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-create:not(:disabled):active {
+  opacity: 0.8;
+}
+
+.create-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(233, 69, 96, 0.15);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #e94560;
+}
+
+.create-error.hidden {
+  display: none;
+}
+
+/* --- Create Spinner --- */
+
+.create-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: #a0a0b0;
+  font-size: 14px;
+}
+
+.create-spinner.hidden {
+  display: none;
+}
+
+/* --- Directory Browser --- */
+
+.browse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.browse-back {
+  background: none;
+  border: none;
+  color: #a0a0b0;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.browse-select {
+  padding: 6px 14px;
+  background: #e94560;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.browse-breadcrumb {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+  color: #808098;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-segment {
+  cursor: pointer;
+  color: #a0a0b0;
+  transition: color 0.15s;
+}
+
+.breadcrumb-segment:hover,
+.breadcrumb-segment:active {
+  color: #e94560;
+}
+
+.breadcrumb-sep {
+  color: #505070;
+}
+
+.browse-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.browse-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #111122;
+  border-radius: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+}
+
+.browse-item:active {
+  background: #1e1e36;
+}
+
+.browse-item-name {
+  font-size: 14px;
+  color: #d0d0e0;
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+}
+
+.browse-item-arrow {
+  color: #505070;
+  font-size: 14px;
+}
+
+.browse-empty {
+  text-align: center;
+  padding: 24px;
+  color: #505070;
+  font-size: 13px;
+}
+
+.hidden {
+  display: none !important;
+}

@@ -68,6 +68,11 @@ export class SessionStore {
     }, 500);
   }
 
+  /** Get all persisted sessions (including ended). */
+  getAllSessions(): PersistedSession[] {
+    return this.sessions;
+  }
+
   /** Flush any pending save immediately. */
   flush(): void {
     if (this.saveTimer) {
