@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
 export interface PersistedSession {
   id: string;
@@ -93,7 +93,7 @@ export class SessionStore {
 
   private writeToDisk(): void {
     const path = getStorePath();
-    const dir = join(path, "..");
+    const dir = dirname(path);
     mkdirSync(dir, { recursive: true });
 
     const data: PersistedSessions = {

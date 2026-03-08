@@ -69,7 +69,7 @@ const cardCallbacks: CardCallbacks = {
     }
     const hubUrl = window.location.href;
     const url = `http://${baseIP}:${current.port}?token=${current.token}&hub=${encodeURIComponent(hubUrl)}`;
-    window.open(url, "_blank");
+    window.open(url, `session-${current.id}`);
   },
 
   onStop(sessionId: string) {
