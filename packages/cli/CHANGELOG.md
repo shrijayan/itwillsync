@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/shrijayan/itwillsync/compare/v1.4.0...v1.5.0) (2026-03-08)
+
+
+### Features
+
+* enhance mobile experience with terminal resizing and touch handling improvements ([ad1b612](https://github.com/shrijayan/itwillsync/commit/ad1b612e744636c70d23b2c92e153408564d3b64))
+* implement auto-resize for PTY on terminal focus for mobile devices ([2b91352](https://github.com/shrijayan/itwillsync/commit/2b91352d4174c761d2a4f8a4a0e4ce8c80d0c65b))
+
 # [1.4.0](https://github.com/shrijayan/itwillsync/compare/v1.3.8...v1.4.0) (2026-03-08)
 
 
