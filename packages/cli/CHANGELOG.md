@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/shrijayan/itwillsync/compare/v1.6.0...v1.6.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* change session URL opening method from window.open to window.location.href for better navigation ([07fca55](https://github.com/shrijayan/itwillsync/commit/07fca555ed30856f988cde219ac8a03bf3c6c266))
+
 # [1.6.0](https://github.com/shrijayan/itwillsync/compare/v1.5.2...v1.6.0) (2026-03-08)
 
 
