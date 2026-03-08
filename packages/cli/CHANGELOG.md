@@ -1,3 +1,12 @@
+## [1.5.1](https://github.com/shrijayan/itwillsync/compare/v1.5.0...v1.5.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* remove unnecessary id-token permission from release workflow ([8ce63d0](https://github.com/shrijayan/itwillsync/commit/8ce63d030231e55bd11766b1437095339399da8f))
+* update @types/node dependency to version 25.3.5 in package.json files ([cdd882a](https://github.com/shrijayan/itwillsync/commit/cdd882ad4775e63d8ca208093b558a56d30f2454))
+* update @types/node dependency to version 25.3.5 in pnpm-lock.yaml ([22d6aba](https://github.com/shrijayan/itwillsync/commit/22d6aba0ba9fef2bfc7cbe4b47704dee3b7150df))
+
 # [1.5.0](https://github.com/shrijayan/itwillsync/compare/v1.4.0...v1.5.0) (2026-03-08)
 
 
