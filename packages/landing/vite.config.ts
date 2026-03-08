@@ -8,7 +8,10 @@ export default defineConfig({
     outDir: "../dist",
     emptyOutDir: true,
     rollupOptions: {
-      input: resolve(__dirname, "src/index.html"),
+      input: {
+        main: resolve(__dirname, "src/index.html"),
+        privacy: resolve(__dirname, "src/privacy.html"),
+      },
     },
   },
 });
