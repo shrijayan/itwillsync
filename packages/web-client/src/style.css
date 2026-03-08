@@ -106,6 +106,7 @@ html, body {
   overflow-x: auto;   /* allow horizontal scroll when terminal overflows */
   overflow-y: hidden;  /* vertical scroll handled by xterm viewport */
   -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;  /* allow all native panning, disable double-tap zoom delay */
 }
 
 /* xterm.js overrides for mobile */
@@ -117,6 +118,7 @@ html, body {
 .xterm-viewport {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Reconnecting overlay */

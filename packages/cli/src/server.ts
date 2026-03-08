@@ -38,8 +38,6 @@ export interface SyncServer {
   close(): void;
   /** Resize from the local terminal (always applied, broadcasts to web clients). */
   resizeFromLocal(cols: number, rows: number): void;
-  /** @deprecated Use resizeFromLocal instead */
-  broadcastResize(cols: number, rows: number): void;
 }
 
 /** Extensions eligible for gzip compression. */
@@ -172,14 +170,17 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     clients.add(ws);
     aliveMap.set(ws, true);
 
-    // Send buffered scrollback so reconnecting clients see recent output.
-    // This is the full-buffer path for initial connections. Clients that send
-    // a "resume" message with lastSeq will get delta sync instead.
-    if (scrollbackBuffer.length > 0) {
-      ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
-    }
+    // Client-initiated sync protocol: the client sends { type: "sync", lastSeq }
+    // to request data. Backward compat: if no sync/resume arrives within 150ms,
+    // auto-send full buffer for old clients that expect it.
+    let syncReceived = false;
+    const fallbackTimer = setTimeout(() => {
+      if (!syncReceived && scrollbackBuffer.length > 0) {
+        ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
+      }
+    }, 150);
 
-    // Send current PTY dimensions so the web client can match
+    // Send current PTY dimensions immediately
     ws.send(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }));
 
     ws.on("pong", () => {
@@ -209,8 +210,29 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
               }
             }
           }
+        } else if (message.type === "sync" && typeof message.lastSeq === "number") {
+          // Client-initiated sync protocol:
+          // lastSeq === -1: fresh connection → send full scrollback
+          // lastSeq >= 0:  reconnect → send only missed data (delta)
+          syncReceived = true;
+          clearTimeout(fallbackTimer);
+          if (message.lastSeq === -1 || message.lastSeq < seq - scrollbackBuffer.length) {
+            if (scrollbackBuffer.length > 0) {
+              ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
+            }
+          } else {
+            const missed = seq - message.lastSeq;
+            if (missed > 0 && scrollbackBuffer.length > 0) {
+              const delta = missed <= scrollbackBuffer.length
+                ? scrollbackBuffer.slice(-missed)
+                : scrollbackBuffer;
+              ws.send(JSON.stringify({ type: "data", data: delta, seq }));
+            }
+          }
         } else if (message.type === "resume" && typeof message.lastSeq === "number") {
-          // Delta sync: send only the data the client missed since lastSeq
+          // Legacy resume handler for old clients
+          syncReceived = true;
+          clearTimeout(fallbackTimer);
           const missed = seq - message.lastSeq;
           if (missed > 0 && scrollbackBuffer.length > 0) {
             const delta = missed <= scrollbackBuffer.length
@@ -243,14 +265,15 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     scrollbackBuffer += data;
     scrollbackBytes += Buffer.byteLength(data, "utf-8");
     if (scrollbackBytes > scrollbackBufferSize) {
-      // Trim to ~half the limit to avoid trimming on every chunk
+      // Trim to ~half the limit to avoid trimming on every chunk.
+      // Estimate the cut point using the average bytes-per-char ratio.
       const target = Math.floor(scrollbackBufferSize * 0.5);
-      while (scrollbackBytes > target && scrollbackBuffer.length > 0) {
-        const trimChars = Math.min(4096, scrollbackBuffer.length);
-        const trimmed = scrollbackBuffer.slice(0, trimChars);
-        scrollbackBytes -= Buffer.byteLength(trimmed, "utf-8");
-        scrollbackBuffer = scrollbackBuffer.slice(trimChars);
-      }
+      const excessBytes = scrollbackBytes - target;
+      const avgBytesPerChar = scrollbackBytes / scrollbackBuffer.length;
+      const trimChars = Math.min(Math.ceil(excessBytes / avgBytesPerChar), scrollbackBuffer.length);
+      const trimmed = scrollbackBuffer.slice(0, trimChars);
+      scrollbackBuffer = scrollbackBuffer.slice(trimChars);
+      scrollbackBytes -= Buffer.byteLength(trimmed, "utf-8");
     }
 
     const msg = JSON.stringify({ type: "data", data, seq });
@@ -299,10 +322,6 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
           client.send(msg);
         }
       }
-    },
-    broadcastResize(cols: number, rows: number) {
-      // Backward compat — delegates to resizeFromLocal
-      this.resizeFromLocal(cols, rows);
     },
   };
 }

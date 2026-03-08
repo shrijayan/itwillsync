@@ -73,21 +73,26 @@ const terminal = new Terminal({
     brightWhite: "#ffffff",
   },
   allowProposedApi: true,
+  smoothScrollDuration: 125,
 });
 
 const fitAddon = new FitAddon();
 terminal.loadAddon(fitAddon);
 terminal.open(terminalContainer);
 
-// Try WebGL renderer for better performance
-try {
-  const webglAddon = new WebglAddon();
-  webglAddon.onContextLoss(() => {
-    webglAddon.dispose();
-  });
-  terminal.loadAddon(webglAddon);
-} catch {
-  // WebGL not available, fall back to canvas renderer
+// Load WebGL renderer only on desktop — on mobile, the canvas renderer provides
+// smoother native touch scrolling. Same media query as style.css extra-keys rule.
+const isDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+if (isDesktop) {
+  try {
+    const webglAddon = new WebglAddon();
+    webglAddon.onContextLoss(() => {
+      webglAddon.dispose();
+    });
+    terminal.loadAddon(webglAddon);
+  } catch {
+    // WebGL not available, fall back to canvas renderer
+  }
 }
 
 fitAddon.fit();
@@ -141,11 +146,14 @@ function getScrollbarWidth(): number {
 }
 
 /** Measure the character-width / font-size ratio for the current font family. */
+let _charRatio: number | null = null;
 function measureCharRatio(): number {
+  if (_charRatio !== null) return _charRatio;
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
   ctx.font = `10px ${terminal.options.fontFamily}`;
-  return ctx.measureText("W").width / 10;
+  _charRatio = ctx.measureText("W").width / 10;
+  return _charRatio;
 }
 
 /** Calculate optimal font size and resize terminal to match PTY dimensions. */
@@ -185,6 +193,7 @@ const resumeAutoPan = () => {
   if (userScrollTimer) clearTimeout(userScrollTimer);
   userScrollTimer = setTimeout(() => {
     userScrolling = false;
+    resizeTerminal(); // Catch up on any missed resize during scroll
   }, 1500);
 };
 terminalContainer.addEventListener("touchend", resumeAutoPan, { passive: true });
@@ -319,10 +328,14 @@ function setStatus(state: ConnectionState, attempts: number): void {
 const connection = new ConnectionManager({
   getUrl: getWsUrl,
   onOpen: () => {
-    // Request delta sync if we have a previous sequence number
+    // On reconnect, clear terminal to prevent duplication (full buffer + old content).
+    // On fresh connect (lastSeq === -1), terminal is already empty.
     if (lastSeq >= 0) {
-      connection.send(JSON.stringify({ type: "resume", lastSeq }));
+      terminal.reset();
     }
+
+    // Client-initiated sync: server sends full buffer (fresh) or delta (reconnect)
+    connection.send(JSON.stringify({ type: "sync", lastSeq }));
     sendResize();
   },
   onMessage: (event) => {
@@ -383,6 +396,20 @@ createExtraKeys(extraKeysContainer, sendInput);
 // Track keyboard height so extra keys bar floats above it
 let lastKeyboardHeight = 0;
 
+let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Expensive terminal resize — debounced and guarded against active scroll. */
+function resizeTerminal(): void {
+  if (userScrolling) return;
+  if (ptyDims) {
+    applyPtyDimensions();
+    panToCursor();
+  } else {
+    fitAddon.fit();
+    sendResize();
+  }
+}
+
 function updateLayout(): void {
   const vv = window.visualViewport;
   const extraKeysBarHeight = extraKeysContainer.offsetHeight;
@@ -393,7 +420,7 @@ function updateLayout(): void {
     const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
     lastKeyboardHeight = Math.max(0, keyboardHeight);
 
-    // Position extra keys bar just above the keyboard
+    // Position extra keys bar just above the keyboard (immediate — cheap CSS)
     extraKeysContainer.style.bottom = `${lastKeyboardHeight}px`;
   }
 
@@ -401,15 +428,12 @@ function updateLayout(): void {
   const totalBottomSpace = extraKeysBarHeight + lastKeyboardHeight;
   document.documentElement.style.setProperty("--extra-keys-height", `${totalBottomSpace}px`);
 
-  if (ptyDims) {
-    // Server controls PTY size — adapt font and pan to cursor
-    applyPtyDimensions();
-    panToCursor();
-  } else {
-    // No server dimensions yet — use fitAddon to size naturally
-    fitAddon.fit();
-    sendResize();
-  }
+  // Debounce the expensive terminal resize (prevents jank during keyboard animation)
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    resizeTimer = null;
+    resizeTerminal();
+  }, 150);
 }
 
 window.addEventListener("resize", updateLayout);
@@ -423,31 +447,92 @@ if (window.visualViewport) {
 // Initial layout calculation after extra keys are rendered
 requestAnimationFrame(updateLayout);
 
-// --- Focus terminal on tap + auto-resize if PTY is too wide ---
+// --- Focus terminal on TAP (not scroll) + auto-resize if PTY is too wide ---
+// Only focus on tap to prevent keyboard from appearing during scroll gestures.
 let lastTouchResize = 0;
-terminalContainer.addEventListener("touchstart", () => {
-  terminal.focus();
+let touchStartY = 0;
+let touchStartTime = 0;
 
-  // Check if PTY is wider than what this screen can display at default font.
-  // This handles the case where the laptop resized the PTY larger,
-  // and the user returns to the phone.
-  const now = Date.now();
-  if (ptyDims && now - lastTouchResize > 1000) {
-    const containerWidth = terminalContainer.clientWidth;
-    const padding = 8;
-    const scrollbar = terminal.options.scrollback === 0 ? 0 : getScrollbarWidth();
-    const availableWidth = containerWidth - padding - scrollbar;
-    const charRatio = measureCharRatio();
-    const naturalCols = Math.floor(availableWidth / (DEFAULT_FONT_SIZE * charRatio));
+terminalContainer.addEventListener("touchstart", (e) => {
+  touchStartY = e.touches[0].clientY;
+  touchStartTime = Date.now();
+}, { passive: true });
 
-    if (ptyDims.cols > naturalCols + 2) {
-      lastTouchResize = now;
-      ptyDims = null;
-      terminal.options.fontSize = DEFAULT_FONT_SIZE;
-      updateLayout();
+terminalContainer.addEventListener("touchend", (e) => {
+  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+  const dt = Date.now() - touchStartTime;
+
+  // Only focus + auto-resize on tap (small movement, short duration)
+  if (dy < 10 && dt < 300) {
+    terminal.focus();
+
+    // Check if PTY is wider than what this screen can display at default font.
+    const now = Date.now();
+    if (ptyDims && now - lastTouchResize > 1000) {
+      const containerWidth = terminalContainer.clientWidth;
+      const padding = 8;
+      const scrollbar = terminal.options.scrollback === 0 ? 0 : getScrollbarWidth();
+      const availableWidth = containerWidth - padding - scrollbar;
+      const charRatio = measureCharRatio();
+      const naturalCols = Math.floor(availableWidth / (DEFAULT_FONT_SIZE * charRatio));
+
+      if (ptyDims.cols > naturalCols + 2) {
+        lastTouchResize = now;
+        ptyDims = null;
+        terminal.options.fontSize = DEFAULT_FONT_SIZE;
+        updateLayout();
+      }
     }
   }
-});
+}, { passive: true });
+
+// --- Mobile vertical scroll handler ---
+// xterm v6's SmoothScrollableElement manages scroll programmatically and doesn't
+// respond to native touch scroll. We translate vertical swipes into scrollLines().
+if (!isDesktop) {
+  let scrollTouchId: number | null = null;
+  let scrollLastY = 0;
+  let scrollAccum = 0;
+
+  terminalContainer.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      scrollTouchId = e.touches[0].identifier;
+      scrollLastY = e.touches[0].clientY;
+      scrollAccum = 0;
+    }
+  }, { passive: true });
+
+  terminalContainer.addEventListener("touchmove", (e) => {
+    if (scrollTouchId === null) return;
+    let touch: Touch | undefined;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === scrollTouchId) {
+        touch = e.changedTouches[i];
+        break;
+      }
+    }
+    if (!touch) return;
+
+    const deltaY = scrollLastY - touch.clientY;
+    scrollLastY = touch.clientY;
+
+    const core = (terminal as any)._core;
+    const cellHeight: number | undefined = core?._renderService?.dimensions?.css?.cell?.height;
+    if (!cellHeight) return;
+
+    scrollAccum += deltaY;
+    const lines = Math.trunc(scrollAccum / cellHeight);
+    if (lines !== 0) {
+      terminal.scrollLines(lines);
+      scrollAccum -= lines * cellHeight;
+    }
+  }, { passive: true });
+
+  terminalContainer.addEventListener("touchend", () => {
+    scrollTouchId = null;
+    scrollAccum = 0;
+  }, { passive: true });
+}
 
 // --- Unlock audio on ANY user gesture (mobile browsers require this) ---
 // Some browsers need 'click' not just 'touchstart', so we listen on both
