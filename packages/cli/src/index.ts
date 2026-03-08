@@ -316,6 +316,14 @@ async function main(): Promise<void> {
   process.stdin.setEncoding("utf-8");
 
   process.stdin.on("data", (data: string) => {
+    // Auto-resize PTY to match local terminal when user types locally.
+    // Handles the case where a phone resized the PTY smaller,
+    // and the user returns to the laptop without resizing the window.
+    if (process.stdout.columns && process.stdout.rows) {
+      if (process.stdout.columns !== ptyManager.cols || process.stdout.rows !== ptyManager.rows) {
+        server.resizeFromLocal(process.stdout.columns, process.stdout.rows);
+      }
+    }
     ptyManager.write(data);
   });
 

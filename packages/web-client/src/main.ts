@@ -423,9 +423,30 @@ if (window.visualViewport) {
 // Initial layout calculation after extra keys are rendered
 requestAnimationFrame(updateLayout);
 
-// --- Focus terminal on tap (mobile) ---
+// --- Focus terminal on tap + auto-resize if PTY is too wide ---
+let lastTouchResize = 0;
 terminalContainer.addEventListener("touchstart", () => {
   terminal.focus();
+
+  // Check if PTY is wider than what this screen can display at default font.
+  // This handles the case where the laptop resized the PTY larger,
+  // and the user returns to the phone.
+  const now = Date.now();
+  if (ptyDims && now - lastTouchResize > 1000) {
+    const containerWidth = terminalContainer.clientWidth;
+    const padding = 8;
+    const scrollbar = terminal.options.scrollback === 0 ? 0 : getScrollbarWidth();
+    const availableWidth = containerWidth - padding - scrollbar;
+    const charRatio = measureCharRatio();
+    const naturalCols = Math.floor(availableWidth / (DEFAULT_FONT_SIZE * charRatio));
+
+    if (ptyDims.cols > naturalCols + 2) {
+      lastTouchResize = now;
+      ptyDims = null;
+      terminal.options.fontSize = DEFAULT_FONT_SIZE;
+      updateLayout();
+    }
+  }
 });
 
 // --- Unlock audio on ANY user gesture (mobile browsers require this) ---
