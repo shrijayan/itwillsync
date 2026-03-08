@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/shrijayan/itwillsync/compare/v1.5.2...v1.6.0) (2026-03-08)
+
+
+### Features
+
+* add ToolHistory class to manage tool usage history and persistence ([2ede90b](https://github.com/shrijayan/itwillsync/commit/2ede90bfe370fc127f909e5522f2529adb93e11f))
+
 ## [1.5.2](https://github.com/shrijayan/itwillsync/compare/v1.5.1...v1.5.2) (2026-03-08)
 
 
