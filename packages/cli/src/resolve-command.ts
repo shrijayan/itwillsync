@@ -41,7 +41,8 @@ export async function resolveCommand(command: string): Promise<string> {
         `  2. Open a new terminal and run: ${command} --version\n` +
         `  3. If that works, try running itwillsync again\n\n` +
         `If "${command}" was just installed, you may need to restart your\n` +
-        `terminal so Windows can find it in your PATH.`
+        `terminal so Windows can find it in your PATH.`,
+      { cause: err },
     );
   }
 }

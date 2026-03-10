@@ -1,6 +1,4 @@
 import { defineConfig } from "tsup";
-import { cpSync } from "node:fs";
-import { resolve } from "node:path";
 
 export default defineConfig({
   entry: ["src/daemon.ts"],
@@ -16,9 +14,6 @@ export default defineConfig({
   },
   noExternal: ["ws"],
   onSuccess: async () => {
-    // Copy built dashboard into daemon dist
-    const src = resolve("dist/dashboard");
-    const dest = resolve("dist/dashboard");
     // Dashboard is already built by vite into dist/dashboard — no copy needed
     console.log("Hub daemon built. Dashboard available at dist/dashboard/");
   },

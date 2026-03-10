@@ -32,13 +32,13 @@ async function tryExec(args: string[]): Promise<ExecResult> {
     try {
       const result = await execFileAsync(bin, args);
       return { status: "success", ...result };
-    } catch (err: any) {
-      if (err.code === "ENOENT") {
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
         // Binary not found at this path, try next
         continue;
       }
       // Binary exists but command failed
-      lastError = err;
+      lastError = err as Error;
     }
   }
 

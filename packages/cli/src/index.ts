@@ -1,4 +1,4 @@
-import { PtyManager, getDefaultShell } from "./pty-manager.js";
+import { PtyManager } from "./pty-manager.js";
 import { generateToken } from "./auth.js";
 import { findAvailablePort, resolveSessionIP } from "./network.js";
 import { createSyncServer } from "./server.js";
@@ -203,14 +203,11 @@ async function main(): Promise<void> {
   const config = loadConfig();
 
   // Determine networking mode: CLI flag > saved config > default
-  let networkingMode: NetworkingMode = "local";
-  if (options.tailscale) {
-    networkingMode = "tailscale";
-  } else if (options.local) {
-    networkingMode = "local";
-  } else {
-    networkingMode = config.networkingMode;
-  }
+  const networkingMode: NetworkingMode = options.tailscale
+    ? "tailscale"
+    : options.local
+      ? "local"
+      : config.networkingMode;
 
   // Parse command and arguments
   const [cmd, ...cmdArgs] = options.command;

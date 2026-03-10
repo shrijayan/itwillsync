@@ -5,6 +5,7 @@ import { createInternalApi } from "../internal-api.js";
 
 const TEST_PORT = 19963; // Avoid conflict with real hub
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function httpRequest(method: string, path: string, body?: object): Promise<{ status: number; data: any }> {
   return new Promise((resolve, reject) => {
     const bodyStr = body ? JSON.stringify(body) : undefined;

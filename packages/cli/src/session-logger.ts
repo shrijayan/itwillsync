@@ -68,7 +68,7 @@ export class SessionLogger {
       await pipeline(source, gzip, dest);
 
       // Remove uncompressed log, keep only .gz
-      try { unlinkSync(this.logPath); } catch {}
+      try { unlinkSync(this.logPath); } catch { /* ignore cleanup */ }
     } catch {
       // If compression fails, keep the uncompressed log
     }

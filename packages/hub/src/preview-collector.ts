@@ -142,7 +142,7 @@ export class PreviewCollector extends EventEmitter<PreviewCollectorEvents> {
     }
   }
 
-  private scheduleReconnect(sessionId: string, session: SessionInfo): void {
+  private scheduleReconnect(sessionId: string, _session: SessionInfo): void {
     const conn = this.connections.get(sessionId);
     if (!conn || conn.closed) return;
 

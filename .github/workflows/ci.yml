@@ -30,6 +30,8 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
       - name: Run tests with coverage
         run: pnpm test:coverage
 

@@ -31,8 +31,8 @@ describe("config", () => {
     expect(configExists()).toBe(true);
   });
 
-  it("saveConfig creates directory and writes JSON", () => {
-    const { readFileSync } = require("node:fs");
+  it("saveConfig creates directory and writes JSON", async () => {
+    const { readFileSync } = await import("node:fs");
 
     saveConfig({ networkingMode: "tailscale" });
 
