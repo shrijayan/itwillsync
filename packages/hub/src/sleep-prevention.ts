@@ -19,6 +19,7 @@ interface FlagFileData {
 
 const SUPPORTED_PLATFORMS = new Set(["darwin", "win32", "linux"]);
 const COMMAND_TIMEOUT_MS = 10_000;
+const SYNC_TIMEOUT_MS = 5_000;
 
 function getHubDir(): string {
   return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
@@ -65,7 +66,7 @@ export class SleepPrevention {
 
       switch (this.platform) {
         case "darwin":
-          result = await this.enableDarwin(password);
+          result = await this.runSudo(["pmset", "-a", "disablesleep", "1"], password);
           break;
         case "win32":
           result = await this.enableWindows();
@@ -92,7 +93,12 @@ export class SleepPrevention {
     }
   }
 
-  async disable(): Promise<{ success: boolean; error?: string }> {
+  /**
+   * Disable sleep prevention. When `force` is true (user-initiated), the flag
+   * file is always deleted. When false (orphan revert), the flag file persists
+   * if the system command fails so the next restart can retry.
+   */
+  async disable(force = false): Promise<{ success: boolean; error?: string }> {
     if (this.busy) {
       return { success: false, error: "Operation in progress" };
     }
@@ -102,24 +108,28 @@ export class SleepPrevention {
 
     this.busy = true;
     try {
-      // Best-effort revert using non-interactive sudo (cached credentials)
+      let reverted = false;
       switch (this.platform) {
         case "darwin":
-          await this.disableDarwin();
+          reverted = (await this.runCommand("sudo", ["-n", "pmset", "-a", "disablesleep", "0"])).exitCode === 0;
           break;
         case "win32":
           await this.disableWindows();
+          reverted = true;
           break;
         case "linux":
-          await this.disableLinux();
+          reverted = await this.disableLinux();
           break;
       }
 
-      // Mark as disabled regardless of revert outcome
       this.enabled = false;
       this.enabledAt = null;
       this.error = null;
-      this.deleteFlagFile();
+
+      if (reverted || force) {
+        this.deleteFlagFile();
+      }
+
       return { success: true };
     } finally {
       this.busy = false;
@@ -134,19 +144,19 @@ export class SleepPrevention {
       switch (this.platform) {
         case "darwin":
           execFileSync("sudo", ["-n", "pmset", "-a", "disablesleep", "0"], {
-            timeout: 5000,
+            timeout: SYNC_TIMEOUT_MS,
             stdio: "ignore",
           });
           break;
         case "win32":
-          execFileSync("powercfg", ["/setacvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "1"], { timeout: 5000, stdio: "ignore" });
-          execFileSync("powercfg", ["/setdcvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "1"], { timeout: 5000, stdio: "ignore" });
-          execFileSync("powercfg", ["/s", "SCHEME_CURRENT"], { timeout: 5000, stdio: "ignore" });
+          execFileSync("powercfg", ["/setacvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "1"], { timeout: SYNC_TIMEOUT_MS, stdio: "ignore" });
+          execFileSync("powercfg", ["/setdcvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "1"], { timeout: SYNC_TIMEOUT_MS, stdio: "ignore" });
+          execFileSync("powercfg", ["/s", "SCHEME_CURRENT"], { timeout: SYNC_TIMEOUT_MS, stdio: "ignore" });
           break;
         case "linux":
           this.revertLogindConfSync();
           execFileSync("sudo", ["-n", "systemctl", "restart", "systemd-logind"], {
-            timeout: 5000,
+            timeout: SYNC_TIMEOUT_MS,
             stdio: "ignore",
           });
           break;
@@ -160,27 +170,17 @@ export class SleepPrevention {
     this.deleteFlagFile();
   }
 
-  // --- macOS ---
-
-  private async enableDarwin(password: string): Promise<{ success: boolean; error?: string }> {
-    return this.runSudo(["pmset", "-a", "disablesleep", "1"], password);
-  }
-
-  private async disableDarwin(): Promise<void> {
-    await this.runCommand("sudo", ["-n", "pmset", "-a", "disablesleep", "0"]);
-  }
-
   // --- Windows ---
 
   private async enableWindows(): Promise<{ success: boolean; error?: string }> {
-    const commands = [
+    const commands: [string, string[]][] = [
       ["powercfg", ["/setacvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "0"]],
       ["powercfg", ["/setdcvalueindex", "SCHEME_CURRENT", "SUB_BUTTONS", "LIDACTION", "0"]],
       ["powercfg", ["/s", "SCHEME_CURRENT"]],
-    ] as const;
+    ];
 
     for (const [cmd, args] of commands) {
-      const result = await this.runCommand(cmd, [...args]);
+      const result = await this.runCommand(cmd, args);
       if (result.exitCode !== 0) {
         return { success: false, error: `powercfg failed: ${result.stderr || "requires admin privileges"}` };
       }
@@ -197,21 +197,18 @@ export class SleepPrevention {
   // --- Linux ---
 
   private async enableLinux(password: string): Promise<{ success: boolean; error?: string }> {
-    // Read current logind.conf, back it up, then write modified version
     const confPath = "/etc/systemd/logind.conf";
     const backupPath = join(getHubDir(), "logind.conf.backup");
 
     try {
-      // Read original via sudo
-      const readResult = await this.runSudoCapture(["cat", confPath], password);
+      const readResult = await this.runSudo(["cat", confPath], password, { captureStdout: true });
       if (!readResult.success) {
         return { success: false, error: readResult.error || "Failed to read logind.conf" };
       }
 
-      const original = readResult.stdout;
+      const original = readResult.stdout!;
       writeFileSync(backupPath, original, "utf-8");
 
-      // Modify the config
       let modified = original;
       const settings: Record<string, string> = {
         HandleLidSwitch: "ignore",
@@ -224,24 +221,20 @@ export class SleepPrevention {
         if (regex.test(modified)) {
           modified = modified.replace(regex, `${key}=${value}`);
         } else {
-          // Append under [Login] section
           modified = modified.replace(/^\[Login\]/m, `[Login]\n${key}=${value}`);
         }
       }
 
-      // Write modified config via sudo tee
-      const writeResult = await this.runSudoWithStdin(["tee", confPath], modified, password);
+      const writeResult = await this.runSudo(["tee", confPath], password, { stdin: modified });
       if (!writeResult.success) {
         return { success: false, error: "Failed to write logind.conf" };
       }
 
-      // Restart systemd-logind
       const restartResult = await this.runSudo(["systemctl", "restart", "systemd-logind"], password);
       if (!restartResult.success) {
-        // Try to restore backup
         try {
           const backup = readFileSync(backupPath, "utf-8");
-          await this.runSudoWithStdin(["tee", confPath], backup, password);
+          await this.runSudo(["tee", confPath], password, { stdin: backup });
           await this.runSudo(["systemctl", "restart", "systemd-logind"], password);
         } catch {}
         return { success: false, error: "Failed to restart systemd-logind" };
@@ -253,17 +246,19 @@ export class SleepPrevention {
     }
   }
 
-  private async disableLinux(): Promise<void> {
+  private async disableLinux(): Promise<boolean> {
     const backupPath = join(getHubDir(), "logind.conf.backup");
-    if (!existsSync(backupPath)) return;
+    if (!existsSync(backupPath)) return true;
 
     try {
       const backup = readFileSync(backupPath, "utf-8");
-      await this.runSudoNonInteractiveWithStdin(["tee", "/etc/systemd/logind.conf"], backup);
-      await this.runCommand("sudo", ["-n", "systemctl", "restart", "systemd-logind"]);
-      unlinkSync(backupPath);
+      const teeResult = await this.runCommand("sudo", ["-n", "tee", "/etc/systemd/logind.conf"], { stdin: backup });
+      const restartResult = await this.runCommand("sudo", ["-n", "systemctl", "restart", "systemd-logind"]);
+      const ok = teeResult.exitCode === 0 && restartResult.exitCode === 0;
+      if (ok) unlinkSync(backupPath);
+      return ok;
     } catch {
-      // Best-effort
+      return false;
     }
   }
 
@@ -275,7 +270,7 @@ export class SleepPrevention {
       const backup = readFileSync(backupPath, "utf-8");
       execFileSync("sudo", ["-n", "tee", "/etc/systemd/logind.conf"], {
         input: backup,
-        timeout: 5000,
+        timeout: SYNC_TIMEOUT_MS,
         stdio: ["pipe", "ignore", "ignore"],
       });
       unlinkSync(backupPath);
@@ -286,16 +281,22 @@ export class SleepPrevention {
 
   // --- Helpers ---
 
-  private runSudo(args: string[], password: string): Promise<{ success: boolean; error?: string }> {
+  /** Run a command via sudo -S (password on stdin). Optionally pipe extra stdin or capture stdout. */
+  private runSudo(
+    args: string[],
+    password: string,
+    opts?: { stdin?: string; captureStdout?: boolean },
+  ): Promise<{ success: boolean; stdout?: string; error?: string }> {
     return new Promise((resolve) => {
+      const capture = opts?.captureStdout ?? false;
       const proc = spawn("sudo", ["-S", ...args], {
-        stdio: ["pipe", "ignore", "pipe"],
+        stdio: ["pipe", capture ? "pipe" : "ignore", "pipe"],
       });
 
+      let stdout = "";
       let stderr = "";
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
+      if (capture) proc.stdout!.on("data", (d: Buffer) => { stdout += d.toString(); });
+      proc.stderr!.on("data", (d: Buffer) => { stderr += d.toString(); });
 
       const timer = setTimeout(() => {
         proc.kill("SIGKILL");
@@ -305,7 +306,7 @@ export class SleepPrevention {
       proc.on("close", (code) => {
         clearTimeout(timer);
         if (code === 0) {
-          resolve({ success: true });
+          resolve({ success: true, ...(capture && { stdout }) });
         } else {
           const msg = stderr.toLowerCase().includes("incorrect password")
             ? "Incorrect password"
@@ -319,120 +320,26 @@ export class SleepPrevention {
         resolve({ success: false, error: err.message });
       });
 
-      // Pipe password to sudo's stdin
       proc.stdin.write(password + "\n");
+      if (opts?.stdin) proc.stdin.write(opts.stdin);
       proc.stdin.end();
     });
   }
 
-  private runSudoCapture(args: string[], password: string): Promise<{ success: boolean; stdout: string; error?: string }> {
+  /** Run a command without sudo password. Optionally pipe stdin. */
+  private runCommand(
+    cmd: string,
+    args: string[],
+    opts?: { stdin?: string },
+  ): Promise<{ exitCode: number; stderr: string }> {
     return new Promise((resolve) => {
-      const proc = spawn("sudo", ["-S", ...args], {
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-
-      let stdout = "";
-      let stderr = "";
-      proc.stdout.on("data", (data: Buffer) => {
-        stdout += data.toString();
-      });
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
-
-      const timer = setTimeout(() => {
-        proc.kill("SIGKILL");
-        resolve({ success: false, stdout: "", error: "Command timed out" });
-      }, COMMAND_TIMEOUT_MS);
-
-      proc.on("close", (code) => {
-        clearTimeout(timer);
-        if (code === 0) {
-          resolve({ success: true, stdout });
-        } else {
-          resolve({ success: false, stdout: "", error: stderr.trim() || `Exit code ${code}` });
-        }
-      });
-
-      proc.on("error", (err) => {
-        clearTimeout(timer);
-        resolve({ success: false, stdout: "", error: err.message });
-      });
-
-      proc.stdin.write(password + "\n");
-      proc.stdin.end();
-    });
-  }
-
-  private runSudoWithStdin(args: string[], input: string, password: string): Promise<{ success: boolean; error?: string }> {
-    return new Promise((resolve) => {
-      const proc = spawn("sudo", ["-S", ...args], {
-        stdio: ["pipe", "ignore", "pipe"],
-      });
-
-      let stderr = "";
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
-
-      const timer = setTimeout(() => {
-        proc.kill("SIGKILL");
-        resolve({ success: false, error: "Command timed out" });
-      }, COMMAND_TIMEOUT_MS);
-
-      proc.on("close", (code) => {
-        clearTimeout(timer);
-        resolve(code === 0 ? { success: true } : { success: false, error: stderr.trim() || `Exit code ${code}` });
-      });
-
-      proc.on("error", (err) => {
-        clearTimeout(timer);
-        resolve({ success: false, error: err.message });
-      });
-
-      // Write password first, then the actual input
-      proc.stdin.write(password + "\n");
-      proc.stdin.write(input);
-      proc.stdin.end();
-    });
-  }
-
-  private runSudoNonInteractiveWithStdin(args: string[], input: string): Promise<void> {
-    return new Promise((resolve) => {
-      const proc = spawn("sudo", ["-n", ...args], {
-        stdio: ["pipe", "ignore", "ignore"],
-      });
-
-      const timer = setTimeout(() => {
-        proc.kill("SIGKILL");
-        resolve();
-      }, COMMAND_TIMEOUT_MS);
-
-      proc.on("close", () => {
-        clearTimeout(timer);
-        resolve();
-      });
-
-      proc.on("error", () => {
-        clearTimeout(timer);
-        resolve();
-      });
-
-      proc.stdin.write(input);
-      proc.stdin.end();
-    });
-  }
-
-  private runCommand(cmd: string, args: string[]): Promise<{ exitCode: number; stderr: string }> {
-    return new Promise((resolve) => {
+      const hasStdin = opts?.stdin != null;
       const proc = spawn(cmd, args, {
-        stdio: ["ignore", "ignore", "pipe"],
+        stdio: [hasStdin ? "pipe" : "ignore", "ignore", "pipe"],
       });
 
       let stderr = "";
-      proc.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
-      });
+      proc.stderr!.on("data", (d: Buffer) => { stderr += d.toString(); });
 
       const timer = setTimeout(() => {
         proc.kill("SIGKILL");
@@ -448,6 +355,11 @@ export class SleepPrevention {
         clearTimeout(timer);
         resolve({ exitCode: 1, stderr: err.message });
       });
+
+      if (hasStdin) {
+        proc.stdin!.write(opts!.stdin);
+        proc.stdin!.end();
+      }
     });
   }
 
@@ -483,13 +395,12 @@ export class SleepPrevention {
 
       if (data.enabled) {
         console.log("Reverting orphaned sleep prevention setting...");
-        // Fire-and-forget async revert
         this.enabled = true;
         this.enabledAt = data.enabledAt;
+        // Don't force — flag persists if revert fails, so next restart retries
         this.disable().catch(() => {});
       }
     } catch {
-      // Corrupted flag file — delete it
       this.deleteFlagFile();
     }
   }

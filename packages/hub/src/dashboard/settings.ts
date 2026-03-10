@@ -18,8 +18,6 @@ let sleepSpinner: HTMLElement;
 let sleepUnsupported: HTMLElement;
 let enableBtn: HTMLButtonElement;
 
-let currentState: SleepPreventionState | null = null;
-
 export function initSettings(sendMessage: (msg: object) => void): void {
   sendMessageFn = sendMessage;
 
@@ -76,11 +74,13 @@ export function initSettings(sendMessage: (msg: object) => void): void {
   });
 
   // Cancel button
-  cancelBtn.addEventListener("click", () => {
-    passwordSection.classList.add("hidden");
-    passwordInput.value = "";
-    sleepError.classList.add("hidden");
-  });
+  cancelBtn.addEventListener("click", resetPasswordUI);
+}
+
+function resetPasswordUI(): void {
+  passwordSection.classList.add("hidden");
+  passwordInput.value = "";
+  sleepError.classList.add("hidden");
 }
 
 function submitEnable(): void {
@@ -101,9 +101,7 @@ function submitEnable(): void {
 
 function closeModal(): void {
   settingsModal.classList.add("hidden");
-  passwordSection.classList.add("hidden");
-  passwordInput.value = "";
-  sleepError.classList.add("hidden");
+  resetPasswordUI();
 }
 
 function showError(msg: string): void {
@@ -112,7 +110,6 @@ function showError(msg: string): void {
 }
 
 export function handleSleepStateUpdate(state: SleepPreventionState): void {
-  currentState = state;
   sleepSpinner.classList.add("hidden");
 
   if (!state.supported) {
@@ -127,9 +124,7 @@ export function handleSleepStateUpdate(state: SleepPreventionState): void {
   sleepToggle.setAttribute("aria-checked", state.enabled ? "true" : "false");
 
   // Hide password section on state update (success or external change)
-  passwordSection.classList.add("hidden");
-  passwordInput.value = "";
-  sleepError.classList.add("hidden");
+  resetPasswordUI();
 }
 
 export function handleSleepError(error: string): void {

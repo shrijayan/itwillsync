@@ -356,7 +356,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
 
           case "disable-sleep-prevention": {
             if (!sleepPrevention) break;
-            await sleepPrevention.disable();
+            await sleepPrevention.disable(true);
             broadcast({ type: "sleep-state", state: sleepPrevention.getState() });
             break;
           }
