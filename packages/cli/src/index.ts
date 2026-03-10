@@ -7,6 +7,7 @@ import { configExists, loadConfig, type NetworkingMode } from "./config.js";
 import { SessionLogger } from "./session-logger.js";
 import { runSetupWizard } from "./wizard.js";
 import { parseArgs, printHelp } from "./cli-options.js";
+import { resolveCommand } from "./resolve-command.js";
 import {
   discoverHub,
   spawnHub,
@@ -232,8 +233,26 @@ async function main(): Promise<void> {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const webClientPath = join(__dirname, "web-client");
 
+  // Resolve command to full path (needed on Windows where node-pty can't search PATH)
+  const resolvedCmd = await resolveCommand(cmd);
+
   // Create PTY
-  const ptyManager = new PtyManager(cmd, cmdArgs);
+  let ptyManager: PtyManager;
+  try {
+    ptyManager = new PtyManager(resolvedCmd, cmdArgs);
+  } catch {
+    const msg =
+      process.platform === "win32"
+        ? `Could not start "${cmd}".\n\n` +
+          `Windows could not locate the "${cmd}" executable.\n\n` +
+          `To fix this:\n` +
+          `  1. Open a new terminal and verify: ${cmd} --version\n` +
+          `  2. If that works, try running itwillsync again\n` +
+          `  3. If not, reinstall ${cmd} and restart your terminal`
+        : `Could not start "${cmd}". Make sure it is installed and in your PATH.`;
+    console.error(`\n  ${msg}\n`);
+    process.exit(1);
+  }
 
   // Create session logger (uses a timestamp-based ID since hub registration happens later)
   const sessionId = `${cmd}-${Date.now().toString(36)}`;
