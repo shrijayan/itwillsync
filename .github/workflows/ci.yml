@@ -11,11 +11,15 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install native build tools
+      - name: Install native build tools (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
 
       - uses: pnpm/action-setup@v4
@@ -30,6 +34,7 @@ jobs:
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
+        if: runner.os == 'Linux'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
