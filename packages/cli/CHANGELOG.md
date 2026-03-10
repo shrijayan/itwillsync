@@ -1,3 +1,12 @@
+# [1.7.0](https://github.com/shrijayan/itwillsync/compare/v1.6.2...v1.7.0) (2026-03-10)
+
+
+### Features
+
+* enhance command builder with agent selection and copy functionality ([575bf37](https://github.com/shrijayan/itwillsync/commit/575bf3784b8a44f27f3c68c1d5506ad7ff643852))
+* enhance mobile experience by adjusting viewport settings and improving keyboard interaction ([752c2f3](https://github.com/shrijayan/itwillsync/commit/752c2f34c9bc58769062aad028f22b4790a72d92))
+* implement sleep prevention feature with settings modal and state management ([626fdf1](https://github.com/shrijayan/itwillsync/commit/626fdf1d11243b2ba073eb1c6c6aec1e36b9e714))
+
 ## [1.6.2](https://github.com/shrijayan/itwillsync/compare/v1.6.1...v1.6.2) (2026-03-08)
 
 
