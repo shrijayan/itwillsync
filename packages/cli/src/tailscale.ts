@@ -1,25 +1,10 @@
-import { execFile } from "node:child_process";
+import { execFileAsync } from "./exec-utils.js";
 
 export interface TailscaleStatus {
   installed: boolean;
   running: boolean;
   ip: string | null;
   hostname: string | null;
-}
-
-function execCommand(
-  cmd: string,
-  args: string[]
-): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    execFile(cmd, args, { timeout: 5000 }, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
-      }
-    });
-  });
 }
 
 /**
@@ -45,7 +30,7 @@ async function tryExec(args: string[]): Promise<ExecResult> {
 
   for (const bin of getTailscalePaths()) {
     try {
-      const result = await execCommand(bin, args);
+      const result = await execFileAsync(bin, args);
       return { status: "success", ...result };
     } catch (err: any) {
       if (err.code === "ENOENT") {

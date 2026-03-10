@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFileAsync } from "./exec-utils.js";
 
 /**
  * Resolves a command name to its full executable path on Windows.
@@ -21,10 +21,15 @@ export async function resolveCommand(command: string): Promise<string> {
   }
 
   try {
-    const resolved = await whereCommand(command);
-    return resolved;
-  } catch (err: any) {
-    if (err.code === "ENOENT") {
+    const { stdout } = await execFileAsync("where.exe", [command]);
+    // where.exe returns one match per line; take the first (highest priority)
+    const firstMatch = stdout.split("\n")[0]?.trim();
+    if (firstMatch) {
+      return firstMatch;
+    }
+    throw new Error(`where.exe returned empty output for "${command}"`);
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
       // where.exe itself not found (extremely unlikely) — let node-pty try
       return command;
     }
@@ -39,22 +44,4 @@ export async function resolveCommand(command: string): Promise<string> {
         `terminal so Windows can find it in your PATH.`
     );
   }
-}
-
-function whereCommand(command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    execFile("where.exe", [command], { timeout: 5000 }, (error, stdout) => {
-      if (error) {
-        reject(error);
-      } else {
-        // where.exe returns one match per line; take the first (highest priority)
-        const firstMatch = stdout.trim().split("\n")[0]?.trim();
-        if (firstMatch) {
-          resolve(firstMatch);
-        } else {
-          reject(new Error(`where.exe returned empty output for "${command}"`));
-        }
-      }
-    });
-  });
 }

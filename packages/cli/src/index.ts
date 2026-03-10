@@ -241,16 +241,13 @@ async function main(): Promise<void> {
   try {
     ptyManager = new PtyManager(resolvedCmd, cmdArgs);
   } catch {
-    const msg =
-      process.platform === "win32"
-        ? `Could not start "${cmd}".\n\n` +
-          `Windows could not locate the "${cmd}" executable.\n\n` +
-          `To fix this:\n` +
-          `  1. Open a new terminal and verify: ${cmd} --version\n` +
-          `  2. If that works, try running itwillsync again\n` +
-          `  3. If not, reinstall ${cmd} and restart your terminal`
-        : `Could not start "${cmd}". Make sure it is installed and in your PATH.`;
-    console.error(`\n  ${msg}\n`);
+    console.error(
+      `\n  Could not start "${cmd}".\n\n` +
+        `  To fix this:\n` +
+        `    1. Make sure "${cmd}" is installed\n` +
+        `    2. Open a new terminal and run: ${cmd} --version\n` +
+        `    3. If that works, try running itwillsync again\n`
+    );
     process.exit(1);
   }
 

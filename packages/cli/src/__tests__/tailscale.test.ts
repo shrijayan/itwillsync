@@ -1,36 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock child_process before importing the module
-vi.mock("node:child_process", () => ({
-  execFile: vi.fn(),
+vi.mock("../exec-utils.js", () => ({
+  execFileAsync: vi.fn(),
 }));
 
-import { execFile } from "node:child_process";
+import { execFileAsync } from "../exec-utils.js";
 import { getTailscaleStatus } from "../tailscale.js";
 
-const mockExecFile = vi.mocked(execFile);
+const mockExecFileAsync = vi.mocked(execFileAsync);
 
-function simulateExecFile(
+function simulateExec(
   behavior: "success" | "enoent" | "error",
   stdout = "",
   stderr = ""
 ) {
-  mockExecFile.mockImplementation(
-    (_cmd: any, _args: any, _opts: any, callback: any) => {
-      if (behavior === "enoent") {
-        const err = new Error("spawn tailscale ENOENT") as any;
-        err.code = "ENOENT";
-        callback(err, "", "");
-      } else if (behavior === "error") {
-        const err = new Error("command failed") as any;
-        err.code = 1;
-        callback(err, "", stderr);
-      } else {
-        callback(null, stdout, stderr);
-      }
-      return {} as any;
-    }
-  );
+  if (behavior === "success") {
+    mockExecFileAsync.mockResolvedValue({ stdout, stderr });
+  } else if (behavior === "enoent") {
+    const err = new Error("spawn tailscale ENOENT") as NodeJS.ErrnoException;
+    err.code = "ENOENT";
+    mockExecFileAsync.mockRejectedValue(err);
+  } else {
+    const err = new Error("command failed") as NodeJS.ErrnoException;
+    err.code = "1";
+    mockExecFileAsync.mockRejectedValue(err);
+  }
 }
 
 describe("getTailscaleStatus", () => {
@@ -39,7 +33,7 @@ describe("getTailscaleStatus", () => {
   });
 
   it("returns installed: false when binary not found (ENOENT)", async () => {
-    simulateExecFile("enoent");
+    simulateExec("enoent");
 
     const status = await getTailscaleStatus();
 
@@ -49,7 +43,7 @@ describe("getTailscaleStatus", () => {
   });
 
   it("returns installed: true, running: false when command fails", async () => {
-    simulateExecFile("error");
+    simulateExec("error");
 
     const status = await getTailscaleStatus();
 
@@ -60,23 +54,15 @@ describe("getTailscaleStatus", () => {
 
   it("returns running: true with IP on success", async () => {
     // First call: tailscale ip -4
-    mockExecFile.mockImplementationOnce(
-      (_cmd: any, _args: any, _opts: any, callback: any) => {
-        callback(null, "100.98.5.48\n", "");
-        return {} as any;
-      }
-    );
+    mockExecFileAsync.mockResolvedValueOnce({
+      stdout: "100.98.5.48\n",
+      stderr: "",
+    });
     // Second call: tailscale status --json (for hostname)
-    mockExecFile.mockImplementationOnce(
-      (_cmd: any, _args: any, _opts: any, callback: any) => {
-        callback(
-          null,
-          JSON.stringify({ Self: { HostName: "my-laptop" } }),
-          ""
-        );
-        return {} as any;
-      }
-    );
+    mockExecFileAsync.mockResolvedValueOnce({
+      stdout: JSON.stringify({ Self: { HostName: "my-laptop" } }),
+      stderr: "",
+    });
 
     const status = await getTailscaleStatus();
 
@@ -88,19 +74,12 @@ describe("getTailscaleStatus", () => {
 
   it("returns running: true with IP even if hostname fetch fails", async () => {
     // First call: tailscale ip -4 succeeds
-    mockExecFile.mockImplementationOnce(
-      (_cmd: any, _args: any, _opts: any, callback: any) => {
-        callback(null, "100.64.0.1\n", "");
-        return {} as any;
-      }
-    );
+    mockExecFileAsync.mockResolvedValueOnce({
+      stdout: "100.64.0.1\n",
+      stderr: "",
+    });
     // Second call: tailscale status --json fails
-    mockExecFile.mockImplementationOnce(
-      (_cmd: any, _args: any, _opts: any, callback: any) => {
-        callback(new Error("status failed"), "", "");
-        return {} as any;
-      }
-    );
+    mockExecFileAsync.mockRejectedValueOnce(new Error("status failed"));
 
     const status = await getTailscaleStatus();
 
@@ -111,7 +90,7 @@ describe("getTailscaleStatus", () => {
   });
 
   it("returns running: false when output has no valid Tailscale IP", async () => {
-    simulateExecFile("success", "192.168.1.100\n");
+    simulateExec("success", "192.168.1.100\n");
 
     const status = await getTailscaleStatus();
 
