@@ -14,6 +14,11 @@ import {
   clearAttention,
   clearAll as clearAllNotifications,
 } from "./audio.js";
+import {
+  initSettings,
+  handleSleepStateUpdate,
+  handleSleepError,
+} from "./settings.js";
 
 // Extract connection info from URL
 const params = new URLSearchParams(window.location.search);
@@ -49,6 +54,10 @@ function handleFirstInteraction(): void {
 document.addEventListener("click", handleFirstInteraction);
 document.addEventListener("touchstart", handleFirstInteraction);
 
+// --- Settings ---
+
+// initSettings is called after sendMessage is defined (below)
+
 // --- WS sending ---
 
 function sendMessage(msg: object): void {
@@ -56,6 +65,8 @@ function sendMessage(msg: object): void {
     ws.send(JSON.stringify(msg));
   }
 }
+
+initSettings(sendMessage);
 
 // --- Card callbacks ---
 
@@ -368,6 +379,14 @@ function connect(): void {
           createFormView.classList.remove("hidden");
           createError.textContent = msg.error as string;
           createError.classList.remove("hidden");
+          break;
+        }
+        case "sleep-state": {
+          handleSleepStateUpdate(msg.state);
+          break;
+        }
+        case "sleep-error": {
+          handleSleepError(msg.error as string);
           break;
         }
         case "operation-error": {

@@ -8,6 +8,7 @@ import { validateToken, RateLimiter } from "./auth.js";
 import type { SessionRegistry } from "./registry.js";
 import type { PreviewCollector } from "./preview-collector.js";
 import type { ToolHistory } from "./tool-history.js";
+import type { SleepPrevention } from "./sleep-prevention.js";
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -30,6 +31,7 @@ export interface DashboardServerOptions {
   port: number;
   previewCollector?: PreviewCollector;
   toolHistory?: ToolHistory;
+  sleepPrevention?: SleepPrevention;
   onCreateSession?: (tool: string, cwd: string) => void;
 }
 
@@ -39,7 +41,7 @@ export interface DashboardServerOptions {
  * All requests are authenticated with the master token.
  */
 export function createDashboardServer(options: DashboardServerOptions) {
-  const { registry, masterToken, dashboardPath, host, port, previewCollector, toolHistory, onCreateSession } = options;
+  const { registry, masterToken, dashboardPath, host, port, previewCollector, toolHistory, sleepPrevention, onCreateSession } = options;
   const homeDir = homedir();
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
@@ -248,6 +250,11 @@ export function createDashboardServer(options: DashboardServerOptions) {
     const sessions = registry.getAll();
     ws.send(JSON.stringify({ type: "sessions", sessions }));
 
+    // Send current sleep prevention state
+    if (sleepPrevention) {
+      ws.send(JSON.stringify({ type: "sleep-state", state: sleepPrevention.getState() }));
+    }
+
     // Send current preview state for all sessions
     if (previewCollector) {
       const previews = previewCollector.getAllPreviews();
@@ -325,6 +332,32 @@ export function createDashboardServer(options: DashboardServerOptions) {
             } catch (err) {
               ws.send(JSON.stringify({ type: "session-create-error", error: (err as Error).message }));
             }
+            break;
+          }
+
+          case "enable-sleep-prevention": {
+            if (!sleepPrevention) {
+              ws.send(JSON.stringify({ type: "sleep-error", error: "Sleep prevention not available" }));
+              break;
+            }
+            const password = typeof msg.password === "string" ? msg.password : "";
+            if (!password) {
+              ws.send(JSON.stringify({ type: "sleep-error", error: "Password is required" }));
+              break;
+            }
+            const enableResult = await sleepPrevention.enable(password);
+            if (enableResult.success) {
+              broadcast({ type: "sleep-state", state: sleepPrevention.getState() });
+            } else {
+              ws.send(JSON.stringify({ type: "sleep-error", error: enableResult.error }));
+            }
+            break;
+          }
+
+          case "disable-sleep-prevention": {
+            if (!sleepPrevention) break;
+            await sleepPrevention.disable();
+            broadcast({ type: "sleep-state", state: sleepPrevention.getState() });
             break;
           }
 

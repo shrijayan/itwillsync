@@ -58,9 +58,35 @@ html, body {
   animation: pulse 1s infinite;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 #session-count {
   font-size: 13px;
   color: #a0a0b0;
+}
+
+.header-icon-btn {
+  background: none;
+  border: 1px solid #2a2a44;
+  border-radius: 8px;
+  color: #a0a0b0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.header-icon-btn:active {
+  color: #e94560;
+  border-color: #e94560;
 }
 
 /* --- Session List --- */
@@ -801,4 +827,142 @@ html, body {
 
 .hidden {
   display: none !important;
+}
+
+/* --- Settings Modal --- */
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #111122;
+  border-radius: 10px;
+}
+
+.setting-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.setting-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.setting-sublabel {
+  font-size: 11px;
+  color: #707090;
+  margin-top: 2px;
+}
+
+/* --- Toggle Switch --- */
+
+.toggle-btn {
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  background: #2a2a44;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-btn[aria-checked="true"] {
+  background: #2ecc71;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.toggle-knob {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #707090;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.toggle-btn[aria-checked="true"] .toggle-knob {
+  transform: translateX(20px);
+  background: white;
+}
+
+/* --- Setting Warning & Note --- */
+
+.setting-warning {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(243, 156, 18, 0.1);
+  border: 1px solid rgba(243, 156, 18, 0.25);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #f39c12;
+  line-height: 1.5;
+}
+
+.setting-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #505070;
+  text-align: center;
+}
+
+.setting-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(15, 52, 96, 0.4);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #808098;
+  line-height: 1.5;
+}
+
+/* --- Sleep Password Section --- */
+
+#sleep-password-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #0f3460;
+}
+
+#sleep-password-section .form-label {
+  margin-top: 0;
+}
+
+.sleep-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sleep-actions .action-btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.sleep-actions .btn-create {
+  flex: 1;
+  margin-top: 0;
+  padding: 12px;
+  font-size: 14px;
 }

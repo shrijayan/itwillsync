@@ -10,6 +10,7 @@ import { ToolHistory } from "./tool-history.js";
 import { createInternalApi } from "./internal-api.js";
 import { createDashboardServer } from "./server.js";
 import { PreviewCollector } from "./preview-collector.js";
+import { SleepPrevention } from "./sleep-prevention.js";
 
 /** Port for the external dashboard (accessible from phone). SYNC on phone keypad. */
 export const HUB_EXTERNAL_PORT = 7962;
@@ -85,6 +86,9 @@ async function main(): Promise<void> {
   // Tool history for autocomplete
   const toolHistory = new ToolHistory();
 
+  // Sleep prevention (checks for orphaned flag on startup)
+  const sleepPrevention = new SleepPrevention();
+
   // Clean up old session logs (default: 30 days retention)
   const logsDir = join(hubDir, "logs");
   if (existsSync(logsDir)) {
@@ -125,6 +129,7 @@ async function main(): Promise<void> {
     port: HUB_EXTERNAL_PORT,
     previewCollector,
     toolHistory,
+    sleepPrevention,
     onCreateSession: (tool: string, cwd: string) => {
       if (!isValidToolName(tool)) {
         throw new Error(`Invalid tool name: ${tool}`);
@@ -175,6 +180,7 @@ async function main(): Promise<void> {
   scheduleShutdown();
 
   function cleanup(): void {
+    sleepPrevention.cleanupSync();
     previewCollector.close();
     registry.stopHealthChecks();
     sessionStore.flush();

@@ -15,7 +15,15 @@
       <span class="logo">itwillsync</span>
       <span id="status-dot"></span>
     </div>
-    <span id="session-count">0 sessions</span>
+    <div class="header-right">
+      <span id="session-count">0 sessions</span>
+      <button id="btn-settings" class="header-icon-btn" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <main id="session-list">
@@ -67,6 +75,55 @@
       <div id="create-spinner" class="create-spinner hidden">
         <div class="spinner"></div>
         <span>Creating session...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-title">Settings</span>
+        <button class="modal-close" id="settings-modal-close">&times;</button>
+      </div>
+      <div id="settings-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-icon">&#9749;</span>
+            <div>
+              <div class="setting-label">Prevent Sleep</div>
+              <div class="setting-sublabel">Keep computer awake even with lid closed</div>
+            </div>
+          </div>
+          <button id="sleep-toggle" class="toggle-btn" role="switch" aria-checked="false">
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+
+        <div class="setting-warning">
+          &#9888;&#65039; <strong>Battery warning:</strong> Your laptop may shut down if running on battery. Keep it plugged in.
+        </div>
+        <div class="setting-note">Requires admin password &middot; Auto-reverts when hub stops</div>
+        <div class="setting-tip">&#128187; Enable this while you're near your laptop &mdash; you'll need to type your system password.</div>
+
+        <div id="sleep-password-section" class="hidden">
+          <label class="form-label">System password</label>
+          <input type="password" id="sleep-password" class="form-input" placeholder="Enter your password" autocomplete="off" />
+          <div id="sleep-error" class="create-error hidden"></div>
+          <div class="sleep-actions">
+            <button id="sleep-cancel" class="action-btn">Cancel</button>
+            <button id="sleep-enable" class="btn-create">Enable</button>
+          </div>
+        </div>
+
+        <div id="sleep-spinner" class="create-spinner hidden">
+          <div class="spinner"></div>
+          <span>Applying...</span>
+        </div>
+
+        <div id="sleep-unsupported" class="setting-note hidden">
+          Sleep prevention is not available on this platform.
+        </div>
       </div>
     </div>
   </div>
