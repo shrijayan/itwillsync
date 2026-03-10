@@ -532,6 +532,7 @@ html, body {
   width: 100%;
   max-width: 480px;
   max-height: 85vh;
+  max-height: 85dvh;
   overflow-y: auto;
   padding: 20px;
   animation: slideUp 0.2s ease;
@@ -788,6 +789,7 @@ html, body {
   flex-direction: column;
   gap: 2px;
   max-height: 50vh;
+  max-height: 50dvh;
   overflow-y: auto;
 }
 

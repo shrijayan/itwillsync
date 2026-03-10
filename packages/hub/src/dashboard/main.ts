@@ -424,3 +424,17 @@ document.addEventListener("visibilitychange", () => {
 });
 
 connect();
+
+// Mobile keyboard: scroll focused inputs into view and hide FAB
+document.addEventListener("focusin", (e) => {
+  const target = e.target as HTMLElement;
+  if (target.matches("input, textarea")) {
+    fabCreate.style.display = "none";
+    setTimeout(() => {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 300);
+  }
+});
+document.addEventListener("focusout", () => {
+  fabCreate.style.display = "";
+});
