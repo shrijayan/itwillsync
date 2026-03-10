@@ -23,7 +23,7 @@ function createMockOscillator() {
   };
 }
 
-let lastMockCtx: ReturnType<typeof createMockAudioContextObj> | null = null;
+let _lastMockCtx: ReturnType<typeof createMockAudioContextObj> | null = null;
 
 function createMockAudioContextObj(state: AudioContextState = "running") {
   return {
@@ -40,7 +40,7 @@ let constructorSpy: ReturnType<typeof vi.fn>;
 
 function installMockAudioContext(state: AudioContextState = "running") {
   const mockCtx = createMockAudioContextObj(state);
-  lastMockCtx = mockCtx;
+  _lastMockCtx = mockCtx;
   constructorSpy = vi.fn();
 
   globalThis.AudioContext = class {
@@ -94,7 +94,7 @@ describe("notifications", () => {
     vi.resetModules();
     vi.useFakeTimers();
     document.title = "itwillsync";
-    lastMockCtx = null;
+    _lastMockCtx = null;
 
     installMockAudioContext();
   });

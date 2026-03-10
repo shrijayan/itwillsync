@@ -236,7 +236,7 @@ export class SleepPrevention {
           const backup = readFileSync(backupPath, "utf-8");
           await this.runSudo(["tee", confPath], password, { stdin: backup });
           await this.runSudo(["systemctl", "restart", "systemd-logind"], password);
-        } catch {}
+        } catch { /* best-effort restore */ }
         return { success: false, error: "Failed to restart systemd-logind" };
       }
 

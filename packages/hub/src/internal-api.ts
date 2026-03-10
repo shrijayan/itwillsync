@@ -189,7 +189,7 @@ export function createInternalApi(options: InternalApiOptions) {
       // 404 for unknown routes
       res.writeHead(404);
       res.end(JSON.stringify({ error: "Not found" }));
-    } catch (err) {
+    } catch {
       res.writeHead(500);
       res.end(JSON.stringify({ error: "Internal server error" }));
     }

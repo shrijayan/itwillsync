@@ -204,6 +204,7 @@ function panToCursor(): void {
   if (!ptyDims || userScrolling) return;
 
   const cursorX = terminal.buffer.active.cursorX;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- xterm internal API
   const core = (terminal as any)._core;
   const cellWidth: number = core._renderService.dimensions.css.cell.width;
   if (!cellWidth) return;
@@ -516,6 +517,7 @@ if (!isDesktop) {
     const deltaY = scrollLastY - touch.clientY;
     scrollLastY = touch.clientY;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- xterm internal API
     const core = (terminal as any)._core;
     const cellHeight: number | undefined = core?._renderService?.dimensions?.css?.cell?.height;
     if (!cellHeight) return;
@@ -540,6 +542,7 @@ document.addEventListener("click", () => unlockAudio(), { once: true });
 document.addEventListener("touchstart", () => unlockAudio(), { once: true });
 
 // --- Start ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- global marker for duplicate-load detection
 (window as any).__itwillsync_loaded = true;
 initNotifications({
   statusBar: document.getElementById("status-bar")!,

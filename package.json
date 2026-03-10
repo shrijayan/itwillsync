@@ -1,24 +1,37 @@
 {
   "name": "itwillsync-root",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "pnpm --filter @itwillsync/web-client build && pnpm --filter @itwillsync/hub build && pnpm --filter itwillsync build",
     "test": "pnpm -r test",
     "test:coverage": "pnpm --filter itwillsync --filter @itwillsync/hub --filter @itwillsync/web-client exec vitest run --coverage",
     "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r clean",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky",
     "docs:dev": "pnpm --filter @itwillsync/docs dev",
     "docs:build": "pnpm --filter @itwillsync/docs build"
+  },
+  "lint-staged": {
+    "*.ts": "eslint --no-warn-ignored"
   },
   "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=20.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@vitest/coverage-v8": "^4.0.18",
-    "semantic-release": "^25.0.3"
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "semantic-release": "^25.0.3",
+    "typescript-eslint": "^8.57.0"
   }
 }

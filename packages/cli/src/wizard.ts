@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { saveConfig, loadConfig, configExists, type Config, type NetworkingMode } from "./config.js";
+import { saveConfig, type Config, type NetworkingMode } from "./config.js";
 import { getTailscaleStatus } from "./tailscale.js";
 
 export async function runSetupWizard(): Promise<Config> {

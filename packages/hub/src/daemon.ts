@@ -100,9 +100,9 @@ async function main(): Promise<void> {
         try {
           const stat = statSync(filePath);
           if (stat.mtimeMs < cutoff) unlinkSync(filePath);
-        } catch {}
+        } catch { /* ignore stat/unlink */ }
       }
-    } catch {}
+    } catch { /* ignore readdir */ }
   }
 
   // Resolve paths
@@ -189,8 +189,8 @@ async function main(): Promise<void> {
     dashboardServer.close();
 
     // Remove PID file and hub config
-    try { unlinkSync(getPidPath()); } catch {}
-    try { unlinkSync(getHubConfigPath()); } catch {}
+    try { unlinkSync(getPidPath()); } catch { /* ignore cleanup */ }
+    try { unlinkSync(getHubConfigPath()); } catch { /* ignore cleanup */ }
   }
 
   process.on("SIGTERM", () => {

@@ -148,8 +148,8 @@ export async function killStaleHub(): Promise<boolean> {
 
   // Clean up any leftover config files
   const hubDir = getHubDir();
-  try { unlinkSync(join(hubDir, "hub.json")); } catch {}
-  try { unlinkSync(join(hubDir, "hub.pid")); } catch {}
+  try { unlinkSync(join(hubDir, "hub.json")); } catch { /* ignore cleanup */ }
+  try { unlinkSync(join(hubDir, "hub.pid")); } catch { /* ignore cleanup */ }
 
   return true;
 }
