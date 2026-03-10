@@ -32,22 +32,42 @@ function initTerminalAnimation(): void {
   observer.observe(containerEl);
 }
 
-function initCopyButton(): void {
-  const btn = document.getElementById("copy-btn");
-  if (!btn) return;
+function initCommandBuilder(): void {
+  const agentEl = document.getElementById("cmd-agent");
+  const copyBtn = document.getElementById("cmd-copy-btn");
+  const copyLabel = document.getElementById("cmd-copy-label");
+  const picker = document.querySelectorAll(".agent-btn");
 
-  btn.addEventListener("click", async () => {
+  if (!agentEl || !copyBtn || !copyLabel || !picker.length) return;
+
+  let currentAgent = "claude";
+
+  // Agent picker buttons
+  for (const btn of picker) {
+    btn.addEventListener("click", () => {
+      const agent = (btn as HTMLElement).dataset.agent;
+      if (!agent) return;
+      currentAgent = agent;
+      agentEl.textContent = agent;
+
+      // Update active state
+      for (const b of picker) b.classList.remove("active");
+      btn.classList.add("active");
+    });
+  }
+
+  // Copy button
+  copyBtn.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText("npx itwillsync -- claude");
-      btn.textContent = "Copied!";
-      btn.classList.add("copied");
+      await navigator.clipboard.writeText(`npx itwillsync ${currentAgent}`);
+      copyLabel.textContent = "Copied!";
+      copyBtn.classList.add("copied");
       setTimeout(() => {
-        btn.textContent = "Copy";
-        btn.classList.remove("copied");
+        copyLabel.textContent = "Copy";
+        copyBtn.classList.remove("copied");
       }, 2000);
     } catch {
-      // Fallback: select text
-      btn.textContent = "Copy";
+      copyLabel.textContent = "Copy";
     }
   });
 }
@@ -121,7 +141,7 @@ function initStarCount(): void {
 // Init everything
 document.addEventListener("DOMContentLoaded", () => {
   initTerminalAnimation();
-  initCopyButton();
+  initCommandBuilder();
   initVideoEmbed();
   initStarCount();
   initVersionBadge();

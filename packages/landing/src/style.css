@@ -567,6 +567,118 @@ code {
   margin-top: 16px;
 }
 
+/* ===== Command Builder ===== */
+.cmd-builder {
+  max-width: 580px;
+  margin: 32px auto 0;
+}
+
+.cmd-display {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-terminal);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px 10px 0 0;
+  padding: 20px 24px;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  line-height: 1;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.cmd-display:hover {
+  border-color: var(--accent-border);
+}
+
+.cmd-prompt {
+  color: var(--term-green);
+  margin-right: 8px;
+  user-select: none;
+}
+
+.cmd-text {
+  color: var(--accent);
+  margin-right: 8px;
+}
+
+.cmd-agent {
+  color: var(--term-yellow);
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.cmd-cursor {
+  display: inline-block;
+  width: 9px;
+  height: 20px;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: cursor-blink 1060ms step-end infinite;
+  opacity: 0.8;
+}
+
+.cmd-copy-btn {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.cmd-copy-btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.cmd-copy-btn.copied {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.agent-picker {
+  display: flex;
+  gap: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 6px;
+  overflow-x: auto;
+}
+
+.agent-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.agent-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+.agent-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
 /* ===== Agents Row ===== */
 .section--agents {
   padding-top: 0;
@@ -696,6 +808,27 @@ code {
 
   .video-wrapper {
     border-radius: 0;
+  }
+
+  .cmd-display {
+    font-size: 14px;
+    padding: 16px 18px;
+  }
+
+  .cmd-copy-btn {
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .agent-picker {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .agent-btn {
+    font-size: 12px;
+    padding: 8px 12px;
   }
 
   .nav-link--npm {
