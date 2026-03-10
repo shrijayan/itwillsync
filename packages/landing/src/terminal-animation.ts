@@ -136,7 +136,7 @@ export class TerminalAnimation {
           { text: "$ ", cls: "t-green" },
           { text: "npx ", cls: "t-white" },
           { text: "itwillsync", cls: "t-cyan" },
-          { text: " -- ", cls: "t-dim" },
+          { text: " ", cls: "t-dim" },
           { text: agent, cls: "t-yellow" },
         ];
         await this.typeLineCharByChar(commandSpans, signal);

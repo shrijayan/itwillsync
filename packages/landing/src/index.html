@@ -115,7 +115,7 @@
           </svg>
         </div>
         <h3 class="feature-title">One command, zero install</h3>
-        <p class="feature-desc"><code>npx itwillsync -- claude</code> and you're running. No global install, no config files.</p>
+        <p class="feature-desc"><code>npx itwillsync claude</code> and you're running. No global install, no config files.</p>
       </div>
 
       <div class="feature-card">
@@ -185,18 +185,31 @@
   <!-- Quick Start -->
   <section class="section" id="quickstart">
     <h2 class="section-heading">Quick start</h2>
-    <div class="code-block-wrapper">
-      <div class="code-block">
-        <button class="copy-btn" id="copy-btn" type="button" aria-label="Copy command">Copy</button>
-        <pre><code><span class="code-comment"># Run directly (no install needed)</span>
-<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">claude</span>
-
-<span class="code-comment"># Or with any agent</span>
-<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">aider</span>
-<span class="code-dim">$</span> <span class="code-accent">npx itwillsync</span> <span class="code-dim">--</span> <span class="code-yellow">bash</span></code></pre>
+    <p class="section-sub">One command. Pick your agent.</p>
+    <div class="cmd-builder">
+      <div class="cmd-display">
+        <span class="cmd-prompt">$</span>
+        <span class="cmd-text">npx itwillsync</span>
+        <span class="cmd-agent" id="cmd-agent">claude</span>
+        <span class="cmd-cursor"></span>
+        <button class="cmd-copy-btn" id="cmd-copy-btn" type="button" aria-label="Copy command">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          <span id="cmd-copy-label">Copy</span>
+        </button>
       </div>
-      <p class="code-note">Requires Node.js 20+. Works on macOS, Linux, and Windows.</p>
+      <div class="agent-picker">
+        <button class="agent-btn active" data-agent="claude">claude</button>
+        <button class="agent-btn" data-agent="codex">codex</button>
+        <button class="agent-btn" data-agent="aider">aider</button>
+        <button class="agent-btn" data-agent="cline">cline</button>
+        <button class="agent-btn" data-agent="zsh">zsh</button>
+        <button class="agent-btn" data-agent="bash">bash</button>
+      </div>
     </div>
+    <p class="code-note">Requires Node.js 20+. Works on macOS, Linux, and Windows.</p>
   </section>
 
   <!-- Supported Agents -->
