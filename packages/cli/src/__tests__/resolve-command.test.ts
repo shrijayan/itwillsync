@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-vi.mock("node:child_process", () => ({
-  execFile: vi.fn(),
+vi.mock("../exec-utils.js", () => ({
+  execFileAsync: vi.fn(),
 }));
 
-import { execFile } from "node:child_process";
+import { execFileAsync } from "../exec-utils.js";
 import { resolveCommand } from "../resolve-command.js";
 
-const mockExecFile = vi.mocked(execFile);
+const mockExecFileAsync = vi.mocked(execFileAsync);
 const originalPlatform = process.platform;
 
 beforeEach(() => {
@@ -26,24 +26,19 @@ function simulateWhere(
   behavior: "success" | "enoent" | "not-found",
   stdout = ""
 ) {
-  mockExecFile.mockImplementation(
-    (_cmd: any, _args: any, _opts: any, callback: any) => {
-      if (behavior === "enoent") {
-        const err = new Error("spawn where.exe ENOENT") as any;
-        err.code = "ENOENT";
-        callback(err, "", "");
-      } else if (behavior === "not-found") {
-        const err = new Error(
-          "INFO: Could not find files for the given pattern(s)."
-        ) as any;
-        err.code = 1;
-        callback(err, "", "");
-      } else {
-        callback(null, stdout, "");
-      }
-      return {} as any;
-    }
-  );
+  if (behavior === "success") {
+    mockExecFileAsync.mockResolvedValue({ stdout, stderr: "" });
+  } else if (behavior === "enoent") {
+    const err = new Error("spawn where.exe ENOENT") as NodeJS.ErrnoException;
+    err.code = "ENOENT";
+    mockExecFileAsync.mockRejectedValue(err);
+  } else {
+    const err = new Error(
+      "INFO: Could not find files for the given pattern(s)."
+    ) as NodeJS.ErrnoException;
+    err.code = "1";
+    mockExecFileAsync.mockRejectedValue(err);
+  }
 }
 
 describe("resolveCommand", () => {
@@ -52,14 +47,14 @@ describe("resolveCommand", () => {
       setPlatform("linux");
       const result = await resolveCommand("claude");
       expect(result).toBe("claude");
-      expect(mockExecFile).not.toHaveBeenCalled();
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
     });
 
     it("returns command unchanged on macOS", async () => {
       setPlatform("darwin");
       const result = await resolveCommand("claude");
       expect(result).toBe("claude");
-      expect(mockExecFile).not.toHaveBeenCalled();
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
     });
   });
 
@@ -79,12 +74,7 @@ describe("resolveCommand", () => {
       expect(result).toBe(
         "C:\\Users\\admin\\AppData\\Roaming\\npm\\claude.cmd"
       );
-      expect(mockExecFile).toHaveBeenCalledWith(
-        "where.exe",
-        ["claude"],
-        expect.objectContaining({ timeout: 5000 }),
-        expect.any(Function)
-      );
+      expect(mockExecFileAsync).toHaveBeenCalledWith("where.exe", ["claude"]);
     });
 
     it("returns first match when where.exe finds multiple", async () => {
@@ -116,7 +106,7 @@ describe("resolveCommand", () => {
       const result = await resolveCommand(absPath);
 
       expect(result).toBe(absPath);
-      expect(mockExecFile).not.toHaveBeenCalled();
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
     });
 
     it("falls back gracefully if where.exe itself is not found", async () => {
