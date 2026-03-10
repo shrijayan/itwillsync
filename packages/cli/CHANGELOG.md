@@ -1,3 +1,12 @@
+## [1.7.1](https://github.com/shrijayan/itwillsync/compare/v1.7.0...v1.7.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* add pre-commit hook to run lint-staged for code quality checks ([932f2db](https://github.com/shrijayan/itwillsync/commit/932f2db2743a287133424945159304207467579b))
+* add Windows command resolution support and integration tests ([d8a9b61](https://github.com/shrijayan/itwillsync/commit/d8a9b610ef9c554ef1c1909bb84f3574c77feae1))
+* refactor command execution to use execFileAsync for improved error handling ([a32b5b3](https://github.com/shrijayan/itwillsync/commit/a32b5b3f195815b4a48b902c164e44d14548fee5))
+
 # [1.7.0](https://github.com/shrijayan/itwillsync/compare/v1.6.2...v1.7.0) (2026-03-10)
 
 
