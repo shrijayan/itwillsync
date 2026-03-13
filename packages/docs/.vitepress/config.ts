@@ -31,6 +31,7 @@ export default defineConfig({
           { text: "Installation", link: "/getting-started/installation" },
           { text: "Quick Start", link: "/getting-started/quick-start" },
           { text: "Tailscale Setup", link: "/getting-started/tailscale" },
+          { text: "FAQ", link: "/getting-started/faq" },
         ],
       },
       {
