@@ -4,6 +4,26 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/packages/cli"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/packages/web-client"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/packages/hub"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/packages/landing"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/packages/docs"
+    schedule:
+      interval: "daily"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
