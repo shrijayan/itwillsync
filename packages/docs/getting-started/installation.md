@@ -1,3 +1,7 @@
+---
+description: "Install itwillsync via npx or npm. Requires Node.js 20+. Works on macOS, Linux, and Windows."
+---
+
 # Installation
 
 ## Requirements

@@ -1,3 +1,7 @@
+---
+description: "Multi-session dashboard overview. Monitor all your running coding agents from one mobile-friendly interface."
+---
+
 # Dashboard Overview
 
 When you run multiple coding agents with itwillsync, a hub daemon automatically starts and serves a dashboard on your phone. The dashboard shows all active sessions with live terminal previews.

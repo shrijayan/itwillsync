@@ -1,3 +1,7 @@
+---
+description: "See real-time terminal output from all your coding agents in the dashboard without opening each session."
+---
+
 # Live Previews
 
 Each session card in the dashboard shows a live text preview of the terminal output — the last few lines of what the agent is doing.

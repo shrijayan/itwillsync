@@ -2,7 +2,7 @@
 
 # itwillsync
 
-**Control your AI coding agents from anywhere.**
+**Sync any terminal-based AI coding agent to your phone over local network.**
 
 [![npm version](https://img.shields.io/npm/v/itwillsync)](https://www.npmjs.com/package/itwillsync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -14,7 +14,7 @@ Sync any coding agent to your phone — one dashboard for all your sessions. Age
 [Website](https://shrijayan.github.io/itwillsync/) | [Docs](https://shrijayan.github.io/itwillsync/docs/) | [Demo Video](https://youtu.be/Zc0Tb98CXh0)
 
 <!-- TODO: Replace with demo GIF once recorded -->
-<!-- <img src="docs/assets/demo.gif" alt="itwillsync demo" width="700"> -->
+<!-- <img src="docs/assets/demo.gif" alt="itwillsync demo: scanning QR code to connect phone to Claude Code terminal session over local WiFi" width="700"> -->
 
 </div>
 

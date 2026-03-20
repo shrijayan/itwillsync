@@ -1,3 +1,7 @@
+---
+description: "Hub daemon architecture: session registration, port allocation, auto-shutdown, and multi-session coordination."
+---
+
 # Hub Daemon
 
 The hub daemon is a background process that manages the multi-session dashboard. It coordinates session registration, serves the dashboard UI, and collects live terminal previews.

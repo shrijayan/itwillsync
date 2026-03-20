@@ -1,3 +1,7 @@
+---
+description: "How itwillsync works internally: PTY wrapping, WebSocket protocol, HTTP server, and the hub daemon architecture."
+---
+
 # How It Works
 
 ## Data Flow

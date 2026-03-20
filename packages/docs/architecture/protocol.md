@@ -1,3 +1,7 @@
+---
+description: "itwillsync WebSocket protocol specification: message types, authentication flow, and terminal data encoding."
+---
+
 # WebSocket Protocol
 
 itwillsync uses two WebSocket connections: one between sessions and phones, and one between the hub and phones.

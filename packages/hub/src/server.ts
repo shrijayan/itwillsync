@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import { validateToken, RateLimiter } from "./auth.js";
-import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto";
 import type { SessionRegistry } from "./registry.js";
 import type { PreviewCollector } from "./preview-collector.js";
 import type { ToolHistory } from "./tool-history.js";
@@ -44,6 +44,11 @@ export interface DashboardServerOptions {
 export function createDashboardServer(options: DashboardServerOptions) {
   const { registry, masterToken, dashboardPath, host, port, previewCollector, toolHistory, sleepPrevention, onCreateSession } = options;
   const encryptionKey = deriveEncryptionKey(masterToken);
+
+  function sendMsg(ws: WebSocket, msg: object): void {
+    ws.send(encrypt(JSON.stringify(msg), encryptionKey));
+  }
+
   const homeDir = homedir();
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
@@ -250,11 +255,11 @@ export function createDashboardServer(options: DashboardServerOptions) {
 
     // Send current session list
     const sessions = registry.getAll();
-    ws.send(encrypt(JSON.stringify({ type: "sessions", sessions }), encryptionKey));
+    sendMsg(ws, { type: "sessions", sessions });
 
     // Send current sleep prevention state
     if (sleepPrevention) {
-      ws.send(encrypt(JSON.stringify({ type: "sleep-state", state: sleepPrevention.getState() }), encryptionKey));
+      sendMsg(ws, { type: "sleep-state", state: sleepPrevention.getState() });
     }
 
     // Send current preview state for all sessions
@@ -262,22 +267,28 @@ export function createDashboardServer(options: DashboardServerOptions) {
       const previews = previewCollector.getAllPreviews();
       for (const [sessionId, lines] of previews) {
         if (lines.length > 0) {
-          ws.send(encrypt(JSON.stringify({ type: "preview", sessionId, lines }), encryptionKey));
+          sendMsg(ws, { type: "preview", sessionId, lines });
         }
       }
     }
 
     // Handle incoming messages from dashboard clients
     ws.on("message", async (raw: Buffer | string) => {
+      let plaintext: string;
       try {
         const rawStr = typeof raw === "string" ? raw : raw.toString("utf-8");
-        const msg = JSON.parse(decrypt(rawStr, encryptionKey));
+        plaintext = decrypt(rawStr, encryptionKey);
+      } catch {
+        return; // Decryption failed — key mismatch or corrupted
+      }
+      try {
+        const msg = JSON.parse(plaintext);
 
         switch (msg.type) {
           case "stop-session": {
             const session = registry.getById(msg.sessionId);
             if (!session) {
-              ws.send(encrypt(JSON.stringify({ type: "operation-error", operation: "stop", sessionId: msg.sessionId, error: "Session not found" }), encryptionKey));
+              sendMsg(ws, { type: "operation-error", operation: "stop", sessionId: msg.sessionId, error: "Session not found" });
               return;
             }
             try {
@@ -291,7 +302,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
           case "rename-session": {
             const renamed = registry.rename(msg.sessionId, msg.name?.trim());
             if (!renamed) {
-              ws.send(encrypt(JSON.stringify({ type: "operation-error", operation: "rename", sessionId: msg.sessionId, error: "Session not found" }), encryptionKey));
+              sendMsg(ws, { type: "operation-error", operation: "rename", sessionId: msg.sessionId, error: "Session not found" });
             }
             break;
           }
@@ -306,7 +317,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
 
           case "create-session": {
             if (!onCreateSession) {
-              ws.send(encrypt(JSON.stringify({ type: "session-create-error", error: "Session creation not available" }), encryptionKey));
+              sendMsg(ws, { type: "session-create-error", error: "Session creation not available" });
               break;
             }
 
@@ -314,7 +325,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
             const rawCwd = (msg.cwd || "").trim();
 
             if (!tool) {
-              ws.send(encrypt(JSON.stringify({ type: "session-create-error", error: "Tool name is required" }), encryptionKey));
+              sendMsg(ws, { type: "session-create-error", error: "Tool name is required" });
               break;
             }
 
@@ -326,33 +337,33 @@ export function createDashboardServer(options: DashboardServerOptions) {
               const resolved = await realpath(cwd);
               const dirStat = await stat(resolved);
               if (!dirStat.isDirectory()) {
-                ws.send(encrypt(JSON.stringify({ type: "session-create-error", error: "Not a directory" }), encryptionKey));
+                sendMsg(ws, { type: "session-create-error", error: "Not a directory" });
                 break;
               }
 
-              ws.send(encrypt(JSON.stringify({ type: "session-creating", tool, cwd: rawCwd || "~" }), encryptionKey));
+              sendMsg(ws, { type: "session-creating", tool, cwd: rawCwd || "~" });
               onCreateSession(tool, resolved);
             } catch (err) {
-              ws.send(encrypt(JSON.stringify({ type: "session-create-error", error: (err as Error).message }), encryptionKey));
+              sendMsg(ws, { type: "session-create-error", error: (err as Error).message });
             }
             break;
           }
 
           case "enable-sleep-prevention": {
             if (!sleepPrevention) {
-              ws.send(encrypt(JSON.stringify({ type: "sleep-error", error: "Sleep prevention not available" }), encryptionKey));
+              sendMsg(ws, { type: "sleep-error", error: "Sleep prevention not available" });
               break;
             }
             const password = typeof msg.password === "string" ? msg.password : "";
             if (!password) {
-              ws.send(encrypt(JSON.stringify({ type: "sleep-error", error: "Password is required" }), encryptionKey));
+              sendMsg(ws, { type: "sleep-error", error: "Password is required" });
               break;
             }
             const enableResult = await sleepPrevention.enable(password);
             if (enableResult.success) {
               broadcast({ type: "sleep-state", state: sleepPrevention.getState() });
             } else {
-              ws.send(encrypt(JSON.stringify({ type: "sleep-error", error: enableResult.error }), encryptionKey));
+              sendMsg(ws, { type: "sleep-error", error: enableResult.error });
             }
             break;
           }
@@ -367,7 +378,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
           case "get-metadata": {
             const session = registry.getById(msg.sessionId);
             if (!session) {
-              ws.send(encrypt(JSON.stringify({ type: "operation-error", operation: "metadata", sessionId: msg.sessionId, error: "Session not found" }), encryptionKey));
+              sendMsg(ws, { type: "operation-error", operation: "metadata", sessionId: msg.sessionId, error: "Session not found" });
               return;
             }
 
@@ -383,7 +394,7 @@ export function createDashboardServer(options: DashboardServerOptions) {
               // Best-effort
             }
 
-            ws.send(encrypt(JSON.stringify({
+            sendMsg(ws, {
               type: "metadata",
               sessionId: msg.sessionId,
               metadata: {
@@ -395,12 +406,12 @@ export function createDashboardServer(options: DashboardServerOptions) {
                 uptimeMs: Date.now() - session.connectedAt,
                 connectedAt: session.connectedAt,
               },
-            }), encryptionKey));
+            });
             break;
           }
         }
       } catch {
-        // Ignore malformed messages
+        // Malformed JSON; ignore
       }
     });
 

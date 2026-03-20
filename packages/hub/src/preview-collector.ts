@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { WebSocket } from "ws";
 import type { SessionRegistry, SessionInfo } from "./registry.js";
-import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto";
 
 /** Max lines to keep per session preview. */
 const MAX_PREVIEW_LINES = 5;
@@ -123,14 +123,20 @@ export class PreviewCollector extends EventEmitter<PreviewCollectorEvents> {
       });
 
       ws.on("message", (raw: Buffer | string) => {
+        let plaintext: string;
         try {
           const rawStr = typeof raw === "string" ? raw : raw.toString("utf-8");
-          const msg = JSON.parse(decrypt(rawStr, conn.encryptionKey));
+          plaintext = decrypt(rawStr, conn.encryptionKey);
+        } catch {
+          return; // Decryption failed
+        }
+        try {
+          const msg = JSON.parse(plaintext);
           if (msg.type === "data" && typeof msg.data === "string") {
             this.handleData(sessionId, msg.data);
           }
         } catch {
-          // Ignore malformed/undecryptable messages
+          // Malformed JSON; ignore
         }
       });
 

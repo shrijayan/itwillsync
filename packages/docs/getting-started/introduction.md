@@ -1,3 +1,7 @@
+---
+description: "Learn how itwillsync syncs terminal-based coding agents like Claude Code and Aider to your phone over local WiFi or Tailscale."
+---
+
 # Introduction
 
 itwillsync lets you control any terminal-based coding agent from your phone. It wraps your agent in a pseudo-terminal (PTY), starts a local server, and serves a web-based terminal to your phone over your local network or Tailscale.

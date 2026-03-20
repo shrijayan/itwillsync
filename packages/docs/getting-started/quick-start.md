@@ -1,3 +1,7 @@
+---
+description: "Get itwillsync running in 30 seconds. One command, scan QR code, control your coding agent from your phone."
+---
+
 # Quick Start
 
 ## Start a Session

@@ -4,6 +4,7 @@ import { resolve } from "path";
 export default defineConfig({
   root: "src",
   base: "/itwillsync/",
+  publicDir: "../public",
   build: {
     outDir: "../dist",
     emptyOutDir: true,

@@ -1,3 +1,7 @@
+---
+description: "itwillsync CLI reference: all commands, flags, and options for syncing terminal agents to your phone."
+---
+
 # Commands & Flags
 
 ## Usage

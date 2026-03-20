@@ -7,6 +7,32 @@ export default defineConfig({
   description: "Sync any terminal agent to your phone",
   base: "/itwillsync/docs/",
 
+  sitemap: {
+    hostname: "https://shrijayan.github.io/itwillsync/docs/",
+  },
+
+  head: [
+    ["meta", { property: "og:type", content: "website" }],
+    ["meta", { property: "og:site_name", content: "itwillsync Docs" }],
+    [
+      "meta",
+      {
+        property: "og:image",
+        content: "https://shrijayan.github.io/itwillsync/og-image.png",
+      },
+    ],
+    ["meta", { property: "og:image:width", content: "1200" }],
+    ["meta", { property: "og:image:height", content: "630" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
+    [
+      "meta",
+      {
+        name: "twitter:image",
+        content: "https://shrijayan.github.io/itwillsync/og-image.png",
+      },
+    ],
+  ],
+
   vite: {
     plugins: [llmstxt()],
   },

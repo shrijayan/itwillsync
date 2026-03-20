@@ -1,3 +1,7 @@
+---
+description: "Hub daemon management: how itwillsync manages multiple agent sessions through a background process."
+---
+
 # Hub Management
 
 The hub daemon is a background process that manages multiple sessions. It starts automatically and usually doesn't need manual intervention, but these commands help when it does.

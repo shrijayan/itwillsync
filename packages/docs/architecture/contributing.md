@@ -1,3 +1,7 @@
+---
+description: "Contributing to itwillsync: development setup, monorepo structure, PR guidelines, and coding conventions."
+---
+
 # Contributing
 
 ## Setup
