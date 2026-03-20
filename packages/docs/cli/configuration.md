@@ -1,3 +1,7 @@
+---
+description: "Configure itwillsync: network mode, ports, Tailscale, and persistent settings in ~/.itwillsync/config.json."
+---
+
 # Configuration
 
 itwillsync stores configuration in `~/.itwillsync/`.

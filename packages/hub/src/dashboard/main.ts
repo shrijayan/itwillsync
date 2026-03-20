@@ -19,7 +19,7 @@ import {
   handleSleepStateUpdate,
   handleSleepError,
 } from "./settings.js";
-import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto-browser";
 
 // Extract connection info from URL
 const params = new URLSearchParams(window.location.search);

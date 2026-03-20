@@ -1,3 +1,7 @@
+---
+description: "Frequently asked questions about itwillsync — compatibility, security, troubleshooting, and supported coding agents."
+---
+
 # FAQ
 
 ## General

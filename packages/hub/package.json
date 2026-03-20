@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "tweetnacl": "^1.0.3",
+    "@itwillsync/shared": "workspace:*",
     "ws": "^8.18.0"
   },
   "devDependencies": {

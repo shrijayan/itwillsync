@@ -1,0 +1,17 @@
+{
+  "name": "@itwillsync/shared",
+  "version": "1.7.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./crypto": "./src/crypto.ts",
+    "./crypto-browser": "./src/crypto-browser.ts"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.7.0"
+  }
+}

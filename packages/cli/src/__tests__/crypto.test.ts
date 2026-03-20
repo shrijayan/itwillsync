@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { deriveEncryptionKey, encrypt, decrypt } from "../crypto.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto";
+import {
+  deriveEncryptionKey as browserDeriveKey,
+  encrypt as browserEncrypt,
+  decrypt as browserDecrypt,
+} from "@itwillsync/shared/crypto-browser";
 import { randomBytes } from "node:crypto";
 import nacl from "tweetnacl";
 
@@ -92,5 +97,51 @@ describe("encrypt / decrypt", () => {
     // Flip a character in the middle of the ciphertext
     const tampered = ciphertext.slice(0, 30) + "X" + ciphertext.slice(31);
     expect(() => decrypt(tampered, key)).toThrow();
+  });
+});
+
+describe("cross-platform (Node ↔ browser)", () => {
+  const token = randomBytes(32).toString("hex");
+  const nodeKey = deriveEncryptionKey(token);
+  const browserKey = browserDeriveKey(token);
+
+  it("derives the same key on both platforms", () => {
+    expect(nodeKey).toEqual(browserKey);
+  });
+
+  it("Node encrypt → browser decrypt", () => {
+    const msg = JSON.stringify({ type: "resize", cols: 80, rows: 24 });
+    const ciphertext = encrypt(msg, nodeKey);
+    expect(browserDecrypt(ciphertext, browserKey)).toBe(msg);
+  });
+
+  it("browser encrypt → Node decrypt", () => {
+    const msg = JSON.stringify({ type: "resize", cols: 80, rows: 24 });
+    const ciphertext = browserEncrypt(msg, browserKey);
+    expect(decrypt(ciphertext, nodeKey)).toBe(msg);
+  });
+
+  it("cross-platform round-trip with large terminal data", () => {
+    // Simulate scrollback buffer with ANSI escape sequences
+    const data = "\x1b[32muser@host\x1b[0m:\x1b[34m~/project\x1b[0m$ ".repeat(500);
+    const msg = JSON.stringify({ type: "data", data, seq: 12345 });
+
+    // Server → client (Node encrypt, browser decrypt)
+    const ct1 = encrypt(msg, nodeKey);
+    expect(browserDecrypt(ct1, browserKey)).toBe(msg);
+
+    // Client → server (browser encrypt, Node decrypt)
+    const ct2 = browserEncrypt(msg, browserKey);
+    expect(decrypt(ct2, nodeKey)).toBe(msg);
+  });
+
+  it("cross-platform works reliably (100 iterations)", () => {
+    // Encrypted bytes are pseudorandom — run many iterations to ensure
+    // no byte-range-dependent failures (e.g., the windows-1252 bug)
+    for (let i = 0; i < 100; i++) {
+      const msg = JSON.stringify({ type: "input", data: `test-${i}` });
+      const ct = browserEncrypt(msg, browserKey);
+      expect(decrypt(ct, nodeKey)).toBe(msg);
+    }
   });
 });

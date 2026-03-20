@@ -1,3 +1,7 @@
+---
+description: "itwillsync security model: 256-bit tokens, rate limiting, constant-time comparison, zero cloud data storage."
+---
+
 # Security Model
 
 itwillsync is designed for local network use. All communication stays on your WiFi or Tailscale VPN. No data is sent to any cloud service.

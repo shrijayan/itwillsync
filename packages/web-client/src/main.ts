@@ -5,7 +5,7 @@ import "@xterm/xterm/css/xterm.css";
 import { createExtraKeys, applyModifiers, hasActiveModifier } from "./extra-keys";
 import { initNotifications, unlockAudio, showNotification, recordUserActivity } from "./notifications";
 import { ConnectionManager, type ConnectionState } from "./reconnect";
-import { deriveEncryptionKey, encrypt, decrypt } from "./crypto";
+import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto-browser";
 
 // --- DOM Elements ---
 const terminalContainer = document.getElementById("terminal-container")!;

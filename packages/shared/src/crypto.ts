@@ -1,14 +1,16 @@
 import nacl from "tweetnacl";
+import { createHash } from "node:crypto";
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 /**
  * Derives a 32-byte encryption key from a hex token using SHA-512.
- * Uses tweetnacl's pure-JS SHA-512 (nacl.hash) instead of Web Crypto API
- * because crypto.subtle is unavailable in non-secure contexts (HTTP on mobile).
+ * The token is already 256-bit random, so no password stretching is needed.
  */
 export function deriveEncryptionKey(tokenHex: string): Uint8Array {
-  const data = new TextEncoder().encode(tokenHex);
-  const hash = nacl.hash(data); // Pure-JS SHA-512, returns 64-byte Uint8Array
-  return hash.slice(0, 32);
+  const hash = createHash("sha512").update(tokenHex, "utf-8").digest();
+  return new Uint8Array(hash).slice(0, 32);
 }
 
 /**
@@ -17,17 +19,12 @@ export function deriveEncryptionKey(tokenHex: string): Uint8Array {
  */
 export function encrypt(plaintext: string, key: Uint8Array): string {
   const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-  const message = new TextEncoder().encode(plaintext);
+  const message = encoder.encode(plaintext);
   const box = nacl.secretbox(message, nonce, key);
   const full = new Uint8Array(nonce.length + box.length);
   full.set(nonce);
   full.set(box, nonce.length);
-  // Convert to base64 using browser-native API
-  let binary = "";
-  for (let i = 0; i < full.length; i++) {
-    binary += String.fromCharCode(full[i]);
-  }
-  return btoa(binary);
+  return Buffer.from(full).toString("base64");
 }
 
 /**
@@ -36,14 +33,10 @@ export function encrypt(plaintext: string, key: Uint8Array): string {
  * Throws if decryption fails (wrong key or tampered data).
  */
 export function decrypt(ciphertext: string, key: Uint8Array): string {
-  const binary = atob(ciphertext);
-  const full = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    full[i] = binary.charCodeAt(i);
-  }
-  const nonce = full.slice(0, nacl.secretbox.nonceLength);
-  const box = full.slice(nacl.secretbox.nonceLength);
+  const full = new Uint8Array(Buffer.from(ciphertext, "base64"));
+  const nonce = full.subarray(0, nacl.secretbox.nonceLength);
+  const box = full.subarray(nacl.secretbox.nonceLength);
   const decrypted = nacl.secretbox.open(box, nonce, key);
   if (!decrypted) throw new Error("Decryption failed");
-  return new TextDecoder().decode(decrypted);
+  return decoder.decode(decrypted);
 }

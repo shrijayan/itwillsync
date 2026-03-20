@@ -1,3 +1,7 @@
+---
+description: "Manage multiple coding agent sessions from the itwillsync dashboard. Start, stop, and switch between agents."
+---
+
 # Managing Sessions
 
 Each session in the dashboard has an action bar with four buttons.

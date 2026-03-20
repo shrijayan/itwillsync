@@ -1,3 +1,7 @@
+---
+description: "Set up itwillsync with Tailscale to control your coding agents from anywhere, not just your local WiFi network."
+---
+
 # Tailscale Setup
 
 By default, your phone needs to be on the same WiFi network as your computer. With [Tailscale](https://tailscale.com), you can connect from anywhere — coffee shop, cellular, different network.
