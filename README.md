@@ -13,8 +13,7 @@ Sync any coding agent to your phone — one dashboard for all your sessions. Age
 
 [Website](https://shrijayan.github.io/itwillsync/) | [Docs](https://shrijayan.github.io/itwillsync/docs/) | [Demo Video](https://youtu.be/Zc0Tb98CXh0)
 
-<!-- TODO: Replace with demo GIF once recorded -->
-<!-- <img src="docs/assets/demo.gif" alt="itwillsync demo: scanning QR code to connect phone to Claude Code terminal session over local WiFi" width="700"> -->
+<img src="docs/assets/demo.gif" alt="itwillsync demo: running npx itwillsync claude and QR code appearing in terminal" width="700">
 
 </div>
 
