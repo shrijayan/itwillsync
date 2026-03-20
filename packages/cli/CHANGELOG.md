@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/shrijayan/itwillsync/compare/v1.8.0...v1.8.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* bundle @itwillsync/shared to prevent workspace: protocol leak in published package ([280f327](https://github.com/shrijayan/itwillsync/commit/280f327d3bd2ab0aae41e763319d0a2cbd4d5c70))
+
 # [1.8.0](https://github.com/shrijayan/itwillsync/compare/v1.7.1...v1.8.0) (2026-03-20)
 
 
