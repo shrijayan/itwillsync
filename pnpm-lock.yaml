@@ -22,7 +22,7 @@ importers:
         version: 10.0.1(semantic-release@25.0.3(typescript@5.9.3))
       '@vitest/coverage-v8':
         specifier: ^4.1.0
-        version: 4.1.0(vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)))
+        version: 4.1.0(vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)))
       eslint:
         specifier: ^10.0.3
         version: 10.0.3
@@ -77,7 +77,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.0
-        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
+        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2))
 
   packages/docs:
     devDependencies:
@@ -111,10 +111,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^8.0.0
-        version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2)
+        version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)
       vitest:
         specifier: ^4.1.0
-        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2))
+        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
 
   packages/landing:
     devDependencies:
@@ -154,8 +154,8 @@ importers:
         version: 6.0.0
     devDependencies:
       jsdom:
-        specifier: ^29.0.0
-        version: 29.0.0
+        specifier: ^29.0.1
+        version: 29.0.1
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -164,7 +164,7 @@ importers:
         version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)
       vitest:
         specifier: ^4.1.0
-        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
+        version: 4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
 
 packages:
 
@@ -2404,8 +2404,8 @@ packages:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
 
-  jsdom@29.0.0:
-    resolution: {integrity: sha512-9FshNB6OepopZ08unmmGpsF7/qCjxGPbo3NbgfJAnPeHXnsODE9WWffXZtRFRFe0ntzaAOcSKNJFz8wiyvF1jQ==}
+  jsdom@29.0.1:
+    resolution: {integrity: sha512-z6JOK5gRO7aMybVq/y/MlIpKh8JIi68FBKMUtKkK2KH/wMSRlCxQ682d08LB9fYXplyY/UXG8P4XXTScmdjApg==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24.0.0}
     peerDependencies:
       canvas: ^3.0.0
@@ -3570,8 +3570,8 @@ packages:
     resolution: {integrity: sha512-sC+b0tB1whOCzbtlx20fx3WgCXwkW627p4EA9uM+/tNNPkSS+eSEld6pAs9nDv7WbY1UUljBMYPtu9BCOrCWKA==}
     engines: {node: '>=18.17'}
 
-  undici@7.24.4:
-    resolution: {integrity: sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==}
+  undici@7.24.5:
+    resolution: {integrity: sha512-3IWdCpjgxp15CbJnsi/Y9TCDE7HWVN19j1hmzVhoAkY/+CJx449tVxT5wZc1Gwg8J+P0LWvzlBzxYRnHJ+1i7Q==}
     engines: {node: '>=20.18.1'}
 
   unicode-emoji-modifier-base@1.0.0:
@@ -4705,7 +4705,7 @@ snapshots:
       p-filter: 4.1.0
       semantic-release: 25.0.3(typescript@5.9.3)
       tinyglobby: 0.2.15
-      undici: 7.24.4
+      undici: 7.24.5
       url-join: 5.0.0
     transitivePeerDependencies:
       - supports-color
@@ -4946,7 +4946,7 @@ snapshots:
       vite: 5.4.21(@types/node@25.5.0)(lightningcss@1.32.0)
       vue: 3.5.29(typescript@5.9.3)
 
-  '@vitest/coverage-v8@4.1.0(vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)))':
+  '@vitest/coverage-v8@4.1.0(vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)))':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.0
@@ -4958,7 +4958,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
+      vitest: 4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
 
   '@vitest/expect@4.1.0':
     dependencies:
@@ -5993,7 +5993,7 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jsdom@29.0.0:
+  jsdom@29.0.1:
     dependencies:
       '@asamuzakjp/css-color': 5.0.1
       '@asamuzakjp/dom-selector': 7.0.3
@@ -6010,7 +6010,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.1
-      undici: 7.24.4
+      undici: 7.24.5
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -7226,7 +7226,7 @@ snapshots:
 
   undici@6.24.1: {}
 
-  undici@7.24.4: {}
+  undici@7.24.5: {}
 
   unicode-emoji-modifier-base@1.0.0: {}
 
@@ -7412,7 +7412,7 @@ snapshots:
       - typescript
       - universal-cookie
 
-  vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2)):
+  vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2)):
     dependencies:
       '@vitest/expect': 4.1.0
       '@vitest/mocker': 4.1.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)(yaml@2.8.2))
@@ -7436,11 +7436,11 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.5.0
-      jsdom: 29.0.0
+      jsdom: 29.0.1
     transitivePeerDependencies:
       - msw
 
-  vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.0)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)):
+  vitest@4.1.0(@types/node@25.5.0)(jsdom@29.0.1)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2)):
     dependencies:
       '@vitest/expect': 4.1.0
       '@vitest/mocker': 4.1.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(yaml@2.8.2))
@@ -7464,7 +7464,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.5.0
-      jsdom: 29.0.0
+      jsdom: 29.0.1
     transitivePeerDependencies:
       - msw
 
