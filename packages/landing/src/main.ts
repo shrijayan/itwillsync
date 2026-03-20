@@ -1,8 +1,5 @@
 import { TerminalAnimation } from "./terminal-animation";
 
-// YouTube video ID — set this when video is uploaded
-const YOUTUBE_VIDEO_ID = "Zc0Tb98CXh0";
-
 function initTerminalAnimation(): void {
   const outputEl = document.getElementById(
     "terminal-output"
@@ -72,34 +69,6 @@ function initCommandBuilder(): void {
   });
 }
 
-function initVideoEmbed(): void {
-  const section = document.getElementById("demo");
-  const placeholder = document.getElementById("video-placeholder");
-
-  if (!section || !placeholder) return;
-
-  // Hide section if no video ID
-  if (!YOUTUBE_VIDEO_ID) {
-    section.style.display = "none";
-    return;
-  }
-
-  placeholder.addEventListener("click", () => {
-    const wrapper = placeholder.parentElement;
-    if (!wrapper) return;
-
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube-nocookie.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`;
-    iframe.allow =
-      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-    iframe.allowFullscreen = true;
-    iframe.style.cssText = "width:100%;height:100%;border:none;";
-
-    // Replace placeholder with iframe
-    wrapper.replaceChild(iframe, placeholder);
-  });
-}
-
 function initVersionBadge(): void {
   const badge = document.getElementById("version-badge");
   if (!badge) return;
@@ -142,7 +111,6 @@ function initStarCount(): void {
 document.addEventListener("DOMContentLoaded", () => {
   initTerminalAnimation();
   initCommandBuilder();
-  initVideoEmbed();
   initStarCount();
   initVersionBadge();
 });

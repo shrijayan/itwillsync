@@ -13,6 +13,8 @@ itwillsync lets you control any terminal-based coding agent from your phone. It 
 3. Scan it on your phone — a terminal opens in your browser
 4. Control your agent from your phone (or both phone and laptop simultaneously)
 
+![itwillsync demo: running the CLI and QR code appearing](/assets/demo.gif)
+
 ## Multi-Session Dashboard
 
 When you run multiple agents, itwillsync automatically starts a hub daemon that serves a dashboard on your phone. The dashboard shows all active sessions with live terminal previews. Tap any session to open the full terminal.
