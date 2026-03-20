@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/shrijayan/itwillsync/compare/v1.9.0...v1.9.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* add demo GIF to repo so it renders on GitHub README ([fab3165](https://github.com/shrijayan/itwillsync/commit/fab3165954bb2526d50f80a6bdf7f2d4d24877da))
+
 # [1.9.0](https://github.com/shrijayan/itwillsync/compare/v1.8.1...v1.9.0) (2026-03-20)
 
 
