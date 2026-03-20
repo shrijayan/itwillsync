@@ -19,6 +19,7 @@ import {
   handleSleepStateUpdate,
   handleSleepError,
 } from "./settings.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
 
 // Extract connection info from URL
 const params = new URLSearchParams(window.location.search);
@@ -28,6 +29,9 @@ if (!token) {
   document.body.textContent = "Missing authentication token.";
   throw new Error("No token in URL");
 }
+
+// Derive E2E encryption key from token (tweetnacl pure-JS SHA-512, synchronous)
+const encryptionKey = deriveEncryptionKey(token);
 
 const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 const wsUrl = `${wsProtocol}//${window.location.host}?token=${token}`;
@@ -62,7 +66,7 @@ document.addEventListener("touchstart", handleFirstInteraction);
 
 function sendMessage(msg: object): void {
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(msg));
+    ws.send(encrypt(JSON.stringify(msg), encryptionKey));
   }
 }
 
@@ -316,7 +320,7 @@ function connect(): void {
 
   ws.onmessage = (event) => {
     try {
-      const msg = JSON.parse(event.data as string);
+      const msg = JSON.parse(decrypt(event.data as string, encryptionKey));
 
       switch (msg.type) {
         case "sessions": {

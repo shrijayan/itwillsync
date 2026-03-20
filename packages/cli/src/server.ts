@@ -6,6 +6,7 @@ import { WebSocketServer, type WebSocket } from "ws";
 import type { PtyManager } from "./pty-manager.js";
 import type { SessionLogger } from "./session-logger.js";
 import { validateToken } from "./auth.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
 
 /** MIME type mapping for static file serving. */
 const MIME_TYPES: Record<string, string> = {
@@ -108,6 +109,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     clientBufferLimit = DEFAULT_CLIENT_BUFFER_LIMIT,
     logger,
   } = options;
+  const encryptionKey = deriveEncryptionKey(token);
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
   const dropCounters = new WeakMap<WebSocket, number>();
@@ -176,12 +178,12 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     let syncReceived = false;
     const fallbackTimer = setTimeout(() => {
       if (!syncReceived && scrollbackBuffer.length > 0) {
-        ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
+        ws.send(encrypt(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }), encryptionKey));
       }
     }, 150);
 
     // Send current PTY dimensions immediately
-    ws.send(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }));
+    ws.send(encrypt(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }), encryptionKey));
 
     ws.on("pong", () => {
       aliveMap.set(ws, true);
@@ -189,7 +191,8 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
 
     ws.on("message", (raw: Buffer | string) => {
       try {
-        const message = JSON.parse(typeof raw === "string" ? raw : raw.toString("utf-8"));
+        const rawStr = typeof raw === "string" ? raw : raw.toString("utf-8");
+        const message = JSON.parse(decrypt(rawStr, encryptionKey));
 
         if (message.type === "input" && typeof message.data === "string") {
           ptyManager.write(message.data);
@@ -203,7 +206,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
             // Broadcast confirmed dimensions to ALL clients (including sender).
             // The sender needs confirmation because the server sent its old PTY
             // dims on connect, which the client may have already applied.
-            const resizeMsg = JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows });
+            const resizeMsg = encrypt(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }), encryptionKey);
             for (const c of clients) {
               if (c.readyState === c.OPEN) {
                 c.send(resizeMsg);
@@ -218,7 +221,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
           clearTimeout(fallbackTimer);
           if (message.lastSeq === -1 || message.lastSeq < seq - scrollbackBuffer.length) {
             if (scrollbackBuffer.length > 0) {
-              ws.send(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }));
+              ws.send(encrypt(JSON.stringify({ type: "data", data: scrollbackBuffer, seq }), encryptionKey));
             }
           } else {
             const missed = seq - message.lastSeq;
@@ -226,7 +229,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
               const delta = missed <= scrollbackBuffer.length
                 ? scrollbackBuffer.slice(-missed)
                 : scrollbackBuffer;
-              ws.send(JSON.stringify({ type: "data", data: delta, seq }));
+              ws.send(encrypt(JSON.stringify({ type: "data", data: delta, seq }), encryptionKey));
             }
           }
         } else if (message.type === "resume" && typeof message.lastSeq === "number") {
@@ -238,7 +241,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
             const delta = missed <= scrollbackBuffer.length
               ? scrollbackBuffer.slice(-missed)
               : scrollbackBuffer;
-            ws.send(JSON.stringify({ type: "data", data: delta, seq }));
+            ws.send(encrypt(JSON.stringify({ type: "data", data: delta, seq }), encryptionKey));
           }
         }
       } catch {
@@ -276,7 +279,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       scrollbackBytes -= Buffer.byteLength(trimmed, "utf-8");
     }
 
-    const msg = JSON.stringify({ type: "data", data, seq });
+    const msg = encrypt(JSON.stringify({ type: "data", data, seq }), encryptionKey);
     for (const client of clients) {
       if (client.readyState !== client.OPEN) continue;
 
@@ -316,7 +319,7 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     },
     resizeFromLocal(cols: number, rows: number) {
       ptyManager.resize(cols, rows);
-      const msg = JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows });
+      const msg = encrypt(JSON.stringify({ type: "resize", cols: ptyManager.cols, rows: ptyManager.rows }), encryptionKey);
       for (const client of clients) {
         if (client.readyState === client.OPEN) {
           client.send(msg);
