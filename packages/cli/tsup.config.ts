@@ -15,7 +15,7 @@ export default defineConfig({
     js: '#!/usr/bin/env node\nimport{createRequire}from"module";const require=createRequire(import.meta.url);',
   },
   external: ["node-pty", "qrcode-terminal"],
-  noExternal: ["ws"],
+  noExternal: ["ws", "@itwillsync/shared"],
   onSuccess: async () => {
     // Copy built web client into CLI dist
     const webClientSrc = resolve("../web-client/dist");

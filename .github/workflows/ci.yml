@@ -45,3 +45,5 @@ jobs:
           fail_ci_if_error: false
 
       - run: pnpm build
+      - name: Verify publishable
+        run: node scripts/verify-publishable.mjs
