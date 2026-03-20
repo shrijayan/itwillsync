@@ -1,3 +1,14 @@
+# [1.8.0](https://github.com/shrijayan/itwillsync/compare/v1.7.1...v1.8.0) (2026-03-20)
+
+
+### Features
+
+* add additional npm package directories to dependabot configuration for daily updates ([a083631](https://github.com/shrijayan/itwillsync/commit/a0836312c25f24e5fedb30d1abec92bbf1c816da))
+* add encryption for WebSocket communication between CLI and Hub ([7a0109b](https://github.com/shrijayan/itwillsync/commit/7a0109b9ec121dfcf5627ad45ec1affc59c6c424))
+* Add end-to-end encryption for terminal data ([fe63726](https://github.com/shrijayan/itwillsync/commit/fe63726fb47b5124fbedc454241199332b2caf16))
+* add FAQ section to documentation for improved user guidance ([f5d545d](https://github.com/shrijayan/itwillsync/commit/f5d545d5229a9b84539a5f497db254aa2636e704))
+* update CI configuration to support multiple Node.js versions and improve coverage upload conditions ([1d626f3](https://github.com/shrijayan/itwillsync/commit/1d626f3fdd54e8bc1e31f0126f5cf32c8cdf4bdc))
+
 ## [1.7.1](https://github.com/shrijayan/itwillsync/compare/v1.7.0...v1.7.1) (2026-03-10)
 
 
