@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/shrijayan/itwillsync/compare/v1.8.1...v1.9.0) (2026-03-20)
+
+
+### Features
+
+* add demo GIF to showcase itwillsync functionality and remove video placeholder ([07d4b82](https://github.com/shrijayan/itwillsync/commit/07d4b828ba8414cceaa4109bfc2f280f38b76139))
+
 ## [1.8.1](https://github.com/shrijayan/itwillsync/compare/v1.8.0...v1.8.1) (2026-03-20)
 
 
