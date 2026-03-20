@@ -30,6 +30,32 @@ npx itwillsync bash          # or any terminal command
 
 No install needed. Node.js 20+ required.
 
+## Why itwillsync
+
+- **Control your agents from your phone**
+  - Scan a QR code and get full terminal access in your browser — no app install needed
+  - Type commands, approve prompts, and fix errors right from your phone
+  - Stay in the loop while you're away from your desk — kitchen, couch, coffee shop
+
+- **One dashboard for all your sessions**
+  - See every running agent at a glance — status, working directory, uptime
+  - Tap any session to jump into the full terminal
+  - Get alerted when an agent needs your attention
+
+- **Works with any agent**
+  - Claude Code, Aider, Codex, Goose, Cline — if it runs in a terminal, it works
+  - Switch between agents without changing your workflow
+  - Not locked to any single vendor or platform
+
+- **Your data stays yours**
+  - Everything runs on your local network — nothing goes to the cloud
+  - No accounts, no signup, no telemetry
+  - End-to-end encrypted connections with per-session tokens
+
+- **Zero friction to get started**
+  - One command: `npx itwillsync claude` — no install, no config
+  - Works on macOS, Windows, and Linux
+
 ## How It Works
 
 ```

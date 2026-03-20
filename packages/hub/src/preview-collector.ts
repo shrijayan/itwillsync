@@ -1,6 +1,7 @@
 import { EventEmitter } from "node:events";
 import { WebSocket } from "ws";
 import type { SessionRegistry, SessionInfo } from "./registry.js";
+import { deriveEncryptionKey, encrypt, decrypt } from "./crypto.js";
 
 /** Max lines to keep per session preview. */
 const MAX_PREVIEW_LINES = 5;
@@ -21,6 +22,7 @@ interface PreviewCollectorEvents {
 
 interface SessionConnection {
   ws: WebSocket | null;
+  encryptionKey: Uint8Array;
   lines: string[];
   rawBuffer: string;
   throttleTimer: ReturnType<typeof setTimeout> | null;
@@ -90,6 +92,7 @@ export class PreviewCollector extends EventEmitter<PreviewCollectorEvents> {
   private connectToSession(session: SessionInfo): void {
     const conn: SessionConnection = {
       ws: null,
+      encryptionKey: deriveEncryptionKey(session.token),
       lines: [],
       rawBuffer: "",
       throttleTimer: null,
@@ -115,16 +118,19 @@ export class PreviewCollector extends EventEmitter<PreviewCollectorEvents> {
 
       ws.on("open", () => {
         conn.reconnectAttempt = 0;
+        // Send encrypted sync message to request full scrollback
+        ws.send(encrypt(JSON.stringify({ type: "sync", lastSeq: -1 }), conn.encryptionKey));
       });
 
       ws.on("message", (raw: Buffer | string) => {
         try {
-          const msg = JSON.parse(typeof raw === "string" ? raw : raw.toString("utf-8"));
+          const rawStr = typeof raw === "string" ? raw : raw.toString("utf-8");
+          const msg = JSON.parse(decrypt(rawStr, conn.encryptionKey));
           if (msg.type === "data" && typeof msg.data === "string") {
             this.handleData(sessionId, msg.data);
           }
         } catch {
-          // Ignore malformed messages
+          // Ignore malformed/undecryptable messages
         }
       });
 

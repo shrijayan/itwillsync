@@ -5,6 +5,7 @@ import "@xterm/xterm/css/xterm.css";
 import { createExtraKeys, applyModifiers, hasActiveModifier } from "./extra-keys";
 import { initNotifications, unlockAudio, showNotification, recordUserActivity } from "./notifications";
 import { ConnectionManager, type ConnectionState } from "./reconnect";
+import { deriveEncryptionKey, encrypt, decrypt } from "./crypto";
 
 // --- DOM Elements ---
 const terminalContainer = document.getElementById("terminal-container")!;
@@ -237,6 +238,10 @@ terminal.onRender(() => {
   if (ptyDims) requestAnimationFrame(panToCursor);
 });
 
+// --- E2E Encryption Key ---
+// Derived from the session token using SHA-512 (tweetnacl pure-JS, synchronous).
+const encryptionKey = deriveEncryptionKey(token);
+
 // --- WebSocket Connection ---
 let reconnectOverlay: HTMLElement | null = null;
 let endedTimer: ReturnType<typeof setTimeout> | null = null;
@@ -326,6 +331,10 @@ function setStatus(state: ConnectionState, attempts: number): void {
   }
 }
 
+function sendEncrypted(msg: object): void {
+  connection.send(encrypt(JSON.stringify(msg), encryptionKey));
+}
+
 const connection = new ConnectionManager({
   getUrl: getWsUrl,
   onOpen: () => {
@@ -336,12 +345,12 @@ const connection = new ConnectionManager({
     }
 
     // Client-initiated sync: server sends full buffer (fresh) or delta (reconnect)
-    connection.send(JSON.stringify({ type: "sync", lastSeq }));
+    sendEncrypted({ type: "sync", lastSeq });
     sendResize();
   },
   onMessage: (event) => {
     try {
-      const msg = JSON.parse(event.data);
+      const msg = JSON.parse(decrypt(event.data as string, encryptionKey));
       switch (msg.type) {
         case "data":
           terminal.write(msg.data);
@@ -358,27 +367,26 @@ const connection = new ConnectionManager({
         // Future message types (notifications, permissions, etc.) go here
       }
     } catch {
-      // Raw string fallback (backward compat with older servers)
-      terminal.write(typeof event.data === "string" ? event.data : new Uint8Array(event.data as ArrayBuffer));
+      // Decryption or parse failure; ignore
     }
   },
   onStatusChange: setStatus,
 });
 
 function sendResize(): void {
-  connection.send(JSON.stringify({
+  sendEncrypted({
     type: "resize",
     cols: terminal.cols,
     rows: terminal.rows,
-  }));
+  });
 }
 
 // --- Send input to server ---
 function sendInput(data: string): void {
-  connection.send(JSON.stringify({
+  sendEncrypted({
     type: "input",
     data,
-  }));
+  });
 }
 
 // --- Terminal Input → WebSocket (with modifier intercept) ---
@@ -550,4 +558,5 @@ initNotifications({
   statusText,
 });
 terminal.focus();
+
 connection.connect();
