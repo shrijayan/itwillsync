@@ -32,3 +32,16 @@ for (const pkg of packages) {
     // Skip packages without package.json
   }
 }
+
+// Safety check: ensure no workspace: references leak into published CLI dependencies
+const cliPkgJson = JSON.parse(
+  readFileSync(join(packagesDir, "cli", "package.json"), "utf-8")
+);
+const deps = JSON.stringify(cliPkgJson.dependencies || {});
+if (deps.includes("workspace:")) {
+  console.error(
+    "ERROR: workspace: protocol found in CLI dependencies. These cannot be published to npm."
+  );
+  console.error("Dependencies:", deps);
+  process.exit(1);
+}

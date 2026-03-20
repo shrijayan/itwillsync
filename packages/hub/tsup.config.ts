@@ -12,7 +12,7 @@ export default defineConfig({
   banner: {
     js: '#!/usr/bin/env node\nimport{createRequire}from"module";const require=createRequire(import.meta.url);',
   },
-  noExternal: ["ws"],
+  noExternal: ["ws", "@itwillsync/shared"],
   onSuccess: async () => {
     // Dashboard is already built by vite into dist/dashboard — no copy needed
     console.log("Hub daemon built. Dashboard available at dist/dashboard/");
