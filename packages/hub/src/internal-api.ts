@@ -1,9 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { SessionRegistry, SessionRegistration } from "./registry.js";
+import type { WindowsFirewall } from "./windows-firewall.js";
 
 export interface InternalApiOptions {
   registry: SessionRegistry;
   port: number;
+  windowsFirewall?: WindowsFirewall;
 }
 
 /**
@@ -73,6 +75,12 @@ export function createInternalApi(options: InternalApiOptions) {
           res.end(JSON.stringify({ error: (err as Error).message }));
           return;
         }
+
+        // Open Windows Firewall for this session's port (fire-and-forget)
+        if (options.windowsFirewall) {
+          options.windowsFirewall.addRule(`session-${session.id}`, data.port).catch(() => {});
+        }
+
         res.writeHead(201);
         res.end(JSON.stringify({ session }));
         return;
@@ -85,6 +93,14 @@ export function createInternalApi(options: InternalApiOptions) {
           res.writeHead(400);
           res.end(JSON.stringify({ error: "Session ID required" }));
           return;
+        }
+
+        // Remove Windows Firewall rule for this session (fire-and-forget)
+        if (options.windowsFirewall) {
+          const session = registry.getById(id);
+          if (session) {
+            options.windowsFirewall.removeRule(`session-${session.id}`).catch(() => {});
+          }
         }
 
         const removed = registry.unregister(id);
