@@ -1,3 +1,11 @@
+## [1.9.2](https://github.com/shrijayan/itwillsync/compare/v1.9.1...v1.9.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* integrate Windows Firewall management for session connectivity ([5452cdf](https://github.com/shrijayan/itwillsync/commit/5452cdfeeabc646dcbe621c3a7d472a1b1f05462))
+* prevent flaky "throws on tampered ciphertext" test ([c626be7](https://github.com/shrijayan/itwillsync/commit/c626be79109b121331c18bdbdf303cf69beeebb6))
+
 ## [1.9.1](https://github.com/shrijayan/itwillsync/compare/v1.9.0...v1.9.1) (2026-03-20)
 
 
