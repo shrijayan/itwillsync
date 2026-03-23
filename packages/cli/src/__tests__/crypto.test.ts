@@ -94,8 +94,11 @@ describe("encrypt / decrypt", () => {
 
   it("throws on tampered ciphertext", () => {
     const ciphertext = encrypt("secret", key);
-    // Flip a character in the middle of the ciphertext
-    const tampered = ciphertext.slice(0, 30) + "X" + ciphertext.slice(31);
+    // Flip a character in the middle — ensure it actually changes
+    const pos = 30;
+    const replacement = ciphertext[pos] === "X" ? "Y" : "X";
+    const tampered =
+      ciphertext.slice(0, pos) + replacement + ciphertext.slice(pos + 1);
     expect(() => decrypt(tampered, key)).toThrow();
   });
 });
