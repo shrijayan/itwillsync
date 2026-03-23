@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "ws": "^8.18.0"
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@itwillsync/shared": "workspace:*",
