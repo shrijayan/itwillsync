@@ -11,6 +11,7 @@ import { createInternalApi } from "./internal-api.js";
 import { createDashboardServer } from "./server.js";
 import { PreviewCollector } from "./preview-collector.js";
 import { SleepPrevention } from "./sleep-prevention.js";
+import { WindowsFirewall } from "./windows-firewall.js";
 
 /** Port for the external dashboard (accessible from phone). SYNC on phone keypad. */
 export const HUB_EXTERNAL_PORT = 7962;
@@ -89,6 +90,10 @@ async function main(): Promise<void> {
   // Sleep prevention (checks for orphaned flag on startup)
   const sleepPrevention = new SleepPrevention();
 
+  // Windows firewall (auto-add inbound rules so phones can connect)
+  const windowsFirewall = new WindowsFirewall();
+  await windowsFirewall.addRule("hub", HUB_EXTERNAL_PORT);
+
   // Clean up old session logs (default: 30 days retention)
   const logsDir = join(hubDir, "logs");
   if (existsSync(logsDir)) {
@@ -115,6 +120,7 @@ async function main(): Promise<void> {
   const internalApi = createInternalApi({
     registry,
     port: HUB_INTERNAL_PORT,
+    windowsFirewall,
   });
 
   // Start preview collector (subscribes to session WebSockets for live output)
@@ -180,6 +186,7 @@ async function main(): Promise<void> {
   scheduleShutdown();
 
   function cleanup(): void {
+    windowsFirewall.cleanupSync();
     sleepPrevention.cleanupSync();
     previewCollector.close();
     registry.stopHealthChecks();
