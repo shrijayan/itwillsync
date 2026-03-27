@@ -287,7 +287,7 @@ async function main(): Promise<void> {
         }
       }, 10_000);
     } catch (err) {
-      console.warn(`  Warning: Failed to register with hub: ${(err as Error).message.replace(/[\r\n]+/g, " ")}`);
+      console.warn(`  Warning: Failed to register with hub: ${(err as Error).message}`);
     }
   }
 
