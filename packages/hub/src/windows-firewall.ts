@@ -32,7 +32,9 @@ export class WindowsFirewall {
   async addRule(label: string, port: number): Promise<{ success: boolean; error?: string }> {
     if (!this.isWindows) return { success: true };
 
-    const ruleName = `${RULE_PREFIX}-${label}`;
+    // Sanitize label to prevent log/command injection
+    const safeLabel = label.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64);
+    const ruleName = `${RULE_PREFIX}-${safeLabel}`;
 
     // Skip if already tracked
     if (this.rules.has(ruleName)) return { success: true };
@@ -70,7 +72,8 @@ export class WindowsFirewall {
   async removeRule(label: string): Promise<void> {
     if (!this.isWindows) return;
 
-    const ruleName = `${RULE_PREFIX}-${label}`;
+    const safeLabel = label.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64);
+    const ruleName = `${RULE_PREFIX}-${safeLabel}`;
     await this.runNetsh([
       "advfirewall", "firewall", "delete", "rule",
       `name=${ruleName}`,
