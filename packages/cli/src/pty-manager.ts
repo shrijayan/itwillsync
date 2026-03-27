@@ -20,12 +20,11 @@ export function getDefaultShell(): string {
  * Inherits the current process env and sets TERM for proper terminal behavior.
  */
 function buildEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) {
-      env[key] = value;
-    }
-  }
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined
+    )
+  );
   // Set TERM for unix systems to enable color and cursor support
   if (process.platform !== "win32") {
     env["TERM"] = env["TERM"] || "xterm-256color";

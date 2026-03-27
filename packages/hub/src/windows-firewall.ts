@@ -1,6 +1,6 @@
 import { spawn, execFileSync } from "node:child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
 import { homedir } from "node:os";
 
 interface FlagFileData {
@@ -13,7 +13,15 @@ const SYNC_TIMEOUT_MS = 5_000;
 const RULE_PREFIX = "itwillsync";
 
 function getHubDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
+  const envDir = process.env.ITWILLSYNC_CONFIG_DIR;
+  if (envDir) {
+    const resolved = resolve(envDir);
+    if (!isAbsolute(resolved) || envDir.includes("..")) {
+      throw new Error("Invalid ITWILLSYNC_CONFIG_DIR: must be an absolute path without traversal");
+    }
+    return resolved;
+  }
+  return join(homedir(), ".itwillsync");
 }
 
 export class WindowsFirewall {
@@ -32,7 +40,9 @@ export class WindowsFirewall {
   async addRule(label: string, port: number): Promise<{ success: boolean; error?: string }> {
     if (!this.isWindows) return { success: true };
 
-    const ruleName = `${RULE_PREFIX}-${label}`;
+    // Sanitize label to prevent log/command injection
+    const safeLabel = label.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64);
+    const ruleName = `${RULE_PREFIX}-${safeLabel}`;
 
     // Skip if already tracked
     if (this.rules.has(ruleName)) return { success: true };
@@ -70,7 +80,8 @@ export class WindowsFirewall {
   async removeRule(label: string): Promise<void> {
     if (!this.isWindows) return;
 
-    const ruleName = `${RULE_PREFIX}-${label}`;
+    const safeLabel = label.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64);
+    const ruleName = `${RULE_PREFIX}-${safeLabel}`;
     await this.runNetsh([
       "advfirewall", "firewall", "delete", "rule",
       `name=${ruleName}`,

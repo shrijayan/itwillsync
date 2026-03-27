@@ -68,7 +68,12 @@ export function parseArgs(argv: string[]): CliOptions {
       options.command = args.slice(i + 1);
       break;
     } else if (arg === "--port" && i + 1 < args.length) {
-      options.port = parseInt(args[i + 1], 10);
+      const portVal = parseInt(args[i + 1], 10);
+      if (Number.isNaN(portVal) || portVal < 1 || portVal > 65535) {
+        console.error(`Error: Invalid port number "${args[i + 1]}". Must be 1-65535.\n`);
+        process.exit(1);
+      }
+      options.port = portVal;
       i += 2;
     } else if (arg === "--localhost") {
       options.localhost = true;

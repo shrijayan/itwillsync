@@ -16,6 +16,13 @@ if (!version) {
   process.exit(1);
 }
 
+// Validate semver format to prevent injection via crafted version strings
+const SEMVER_RE = /^\d+\.\d+\.\d+(-[\w.]+)?(\+[\w.]+)?$/;
+if (!SEMVER_RE.test(version)) {
+  console.error(`Invalid version format: "${version}". Expected semver (e.g. 1.2.3).`);
+  process.exit(1);
+}
+
 const packagesDir = join(import.meta.dirname, "..", "packages");
 const packages = readdirSync(packagesDir, { withFileTypes: true })
   .filter((d) => d.isDirectory())
