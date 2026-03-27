@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, dirname, resolve, isAbsolute } from "node:path";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, type ChildProcess } from "node:child_process";
 import { generateToken } from "./auth.js";
@@ -23,15 +23,7 @@ export const HUB_INTERNAL_PORT = 7963;
 const AUTO_SHUTDOWN_DELAY_MS = 30_000;
 
 function getHubDir(): string {
-  const envDir = process.env.ITWILLSYNC_CONFIG_DIR;
-  if (envDir) {
-    const resolved = resolve(envDir);
-    if (!isAbsolute(resolved) || envDir.includes("..")) {
-      throw new Error("Invalid ITWILLSYNC_CONFIG_DIR: must be an absolute path without traversal");
-    }
-    return resolved;
-  }
-  return join(homedir(), ".itwillsync");
+  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
 }
 
 function getPidPath(): string {

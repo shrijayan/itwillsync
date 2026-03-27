@@ -1,6 +1,6 @@
 import { spawn, execFileSync } from "node:child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "node:fs";
-import { join, resolve, isAbsolute } from "node:path";
+import { join } from "node:path";
 import { homedir } from "node:os";
 
 export interface SleepPreventionState {
@@ -22,15 +22,7 @@ const COMMAND_TIMEOUT_MS = 10_000;
 const SYNC_TIMEOUT_MS = 5_000;
 
 function getHubDir(): string {
-  const envDir = process.env.ITWILLSYNC_CONFIG_DIR;
-  if (envDir) {
-    const resolved = resolve(envDir);
-    if (!isAbsolute(resolved) || envDir.includes("..")) {
-      throw new Error("Invalid ITWILLSYNC_CONFIG_DIR: must be an absolute path without traversal");
-    }
-    return resolved;
-  }
-  return join(homedir(), ".itwillsync");
+  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
 }
 
 export class SleepPrevention {
