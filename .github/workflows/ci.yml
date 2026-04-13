@@ -23,7 +23,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential python3
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
