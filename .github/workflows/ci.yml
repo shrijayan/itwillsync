@@ -17,7 +17,7 @@ jobs:
         node-version: [20, 22]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install native build tools (Linux)
         if: runner.os == 'Linux'
