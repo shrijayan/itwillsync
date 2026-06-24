@@ -16,9 +16,9 @@
     "@xterm/xterm": "^6.0.0"
   },
   "devDependencies": {
-    "jsdom": "^29.0.1",
+    "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
-    "vite": "^8.0.5",
-    "vitest": "^4.1.2"
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
   }
 }
