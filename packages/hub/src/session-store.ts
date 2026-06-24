@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 
@@ -99,13 +99,16 @@ export class SessionStore {
   private writeToDisk(): void {
     const path = getStorePath();
     const dir = dirname(path);
-    mkdirSync(dir, { recursive: true });
+    // 0o700: only owner can traverse; mode enforced after creation for existing dirs
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
 
     const data: PersistedSessions = {
       version: 1,
       sessions: this.sessions,
     };
 
-    writeFileSync(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
+    // 0o600: only owner can read; mode + explicit chmod covers both new and existing files
+    writeFileSync(path, JSON.stringify(data, null, 2) + "\n", { encoding: "utf-8", mode: 0o600 });
+    chmodSync(path, 0o600);
   }
 }

@@ -64,9 +64,11 @@ document.addEventListener("touchstart", handleFirstInteraction);
 
 // --- WS sending ---
 
+let _sendSeq = 0;
+
 function sendMessage(msg: object): void {
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(encrypt(JSON.stringify(msg), encryptionKey));
+    ws.send(encrypt(JSON.stringify({ ...msg, _seq: _sendSeq++ }), encryptionKey));
   }
 }
 
@@ -82,8 +84,11 @@ const cardCallbacks: CardCallbacks = {
       sendMessage({ type: "clear-attention", sessionId: current.id });
       clearAttention(current.id);
     }
+    // Pass hub URL in the fragment (#) not the query string — fragments are never
+    // sent in Referer headers, so the master token embedded in hubUrl cannot leak
+    // to third-party servers the agent navigates to.
     const hubUrl = window.location.href;
-    const url = `http://${baseIP}:${current.port}?token=${current.token}&hub=${encodeURIComponent(hubUrl)}`;
+    const url = `http://${baseIP}:${current.port}?token=${current.token}#hub=${encodeURIComponent(hubUrl)}`;
     window.location.href = url;
   },
 

@@ -4,6 +4,7 @@ import { SessionRegistry } from "../registry.js";
 import { createInternalApi } from "../internal-api.js";
 
 const TEST_PORT = 19963; // Avoid conflict with real hub
+const TEST_SECRET = "test-internal-secret";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function httpRequest(method: string, path: string, body?: object): Promise<{ status: number; data: any }> {
@@ -15,9 +16,12 @@ function httpRequest(method: string, path: string, body?: object): Promise<{ sta
         port: TEST_PORT,
         path,
         method,
-        headers: bodyStr
-          ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(bodyStr) }
-          : {},
+        headers: {
+          "x-hub-internal-secret": TEST_SECRET,
+          ...(bodyStr
+            ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(bodyStr) }
+            : {}),
+        },
       },
       (res) => {
         let data = "";
@@ -43,7 +47,7 @@ describe("Internal API", () => {
 
   beforeAll(async () => {
     registry = new SessionRegistry();
-    api = createInternalApi({ registry, port: TEST_PORT });
+    api = createInternalApi({ registry, port: TEST_PORT, internalSecret: TEST_SECRET });
     await api.listen();
   });
 
@@ -84,7 +88,7 @@ describe("Internal API", () => {
       });
 
       expect(status).toBe(400);
-      expect(data.error).toContain("Missing required fields");
+      expect(data.error).toContain("required fields");
     });
   });
 

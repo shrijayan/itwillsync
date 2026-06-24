@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
+import { writeFileSync, mkdirSync, chmodSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,24 +75,30 @@ function spawnSession(
 
 async function main(): Promise<void> {
   const hubDir = getHubDir();
-  mkdirSync(hubDir, { recursive: true });
+  // 0o700: only owner can traverse; mode is set on creation and enforced after
+  mkdirSync(hubDir, { recursive: true, mode: 0o700 });
+  chmodSync(hubDir, 0o700);
 
-  // Generate master token
+  // Generate master token and internal API secret (fresh per daemon start)
   const masterToken = generateToken();
+  const internalSecret = generateToken();
   const startedAt = Date.now();
 
-  // Write PID file
-  writeFileSync(getPidPath(), String(process.pid), "utf-8");
+  // Write PID file — owner-only (0o600)
+  writeFileSync(getPidPath(), String(process.pid), { encoding: "utf-8", mode: 0o600 });
+  chmodSync(getPidPath(), 0o600);
 
-  // Write hub config (read by CLI sessions to get master token)
+  // Write hub config — owner-only (0o600); contains secrets read by CLI sessions
   const hubConfig = {
     masterToken,
+    internalSecret,
     externalPort: HUB_EXTERNAL_PORT,
     internalPort: HUB_INTERNAL_PORT,
     pid: process.pid,
     startedAt,
   };
-  writeFileSync(getHubConfigPath(), JSON.stringify(hubConfig, null, 2) + "\n", "utf-8");
+  writeFileSync(getHubConfigPath(), JSON.stringify(hubConfig, null, 2) + "\n", { encoding: "utf-8", mode: 0o600 });
+  chmodSync(getHubConfigPath(), 0o600);
 
   // Create session store + registry
   const sessionStore = new SessionStore();
@@ -131,10 +137,11 @@ async function main(): Promise<void> {
   // Hub lives at dist/hub/daemon.js, CLI entry is at dist/index.js
   const cliEntryPath = join(__dirname, "..", "index.js");
 
-  // Start internal API (localhost only)
+  // Start internal API (localhost only, requires internalSecret header)
   const internalApi = createInternalApi({
     registry,
     port: HUB_INTERNAL_PORT,
+    internalSecret,
     windowsFirewall,
   });
 

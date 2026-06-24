@@ -136,7 +136,14 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
 
   // --- HTTP Server ---
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    let url: URL;
+    try {
+      url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    } catch {
+      res.writeHead(400, { "Content-Type": "text/plain" });
+      res.end("Bad Request");
+      return;
+    }
     let pathname = url.pathname;
 
     // Serve index.html for root
@@ -152,7 +159,14 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
 
   // Handle upgrade requests with token validation
   httpServer.on("upgrade", (req, socket, head) => {
-    const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    let url: URL;
+    try {
+      url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    } catch {
+      socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+      socket.destroy();
+      return;
+    }
     const providedToken = url.searchParams.get("token") || "";
 
     if (!validateToken(providedToken, token)) {
@@ -186,6 +200,10 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
     clients.add(ws);
     aliveMap.set(ws, true);
 
+    // Per-connection replay protection: reject any client message whose _seq
+    // is not strictly greater than the last accepted one
+    let lastClientSeq = -1;
+
     // Client-initiated sync protocol: the client sends { type: "sync", lastSeq }
     // to request data. Backward compat: if no sync/resume arrives within 150ms,
     // auto-send full buffer for old clients that expect it.
@@ -213,6 +231,12 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       }
       try {
         const message = JSON.parse(plaintext);
+
+        // Replay protection: drop any message with a non-increasing sequence number
+        if (typeof message._seq === "number") {
+          if (message._seq <= lastClientSeq) return;
+          lastClientSeq = message._seq;
+        }
 
         if (message.type === "input" && typeof message.data === "string") {
           ptyManager.write(message.data);

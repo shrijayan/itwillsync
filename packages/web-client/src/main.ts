@@ -16,7 +16,8 @@ const statusText = document.getElementById("status-text")!;
 // --- Extract params from URL ---
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
-const rawHubUrl = params.get("hub");
+// Hub URL is passed in the fragment (#hub=...) so it is never sent in Referer headers
+const rawHubUrl = new URLSearchParams(window.location.hash.slice(1)).get("hub");
 const hubUrl = (() => {
   if (!rawHubUrl) return null;
   try {
@@ -331,8 +332,10 @@ function setStatus(state: ConnectionState, attempts: number): void {
   }
 }
 
+let _sendSeq = 0;
+
 function sendEncrypted(msg: object): void {
-  connection.send(encrypt(JSON.stringify(msg), encryptionKey));
+  connection.send(encrypt(JSON.stringify({ ...msg, _seq: _sendSeq++ }), encryptionKey));
 }
 
 const connection = new ConnectionManager({
