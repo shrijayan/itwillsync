@@ -16,6 +16,7 @@ export const SESSION_PORT_START = 7964;
 
 export interface HubConfig {
   masterToken: string;
+  internalSecret: string;
   externalPort: number;
   internalPort: number;
   pid: number;
@@ -50,6 +51,22 @@ function getHubDir(): string {
 
 function getHubConfigPath(): string {
   return join(getHubDir(), "hub.json");
+}
+
+/** Cached internal secret — read once from hub.json, reused across requests. */
+let _cachedInternalSecret: string | null = null;
+
+/** Returns headers containing the internal secret for authenticating to the internal API. */
+function getInternalAuthHeaders(): Record<string, string> {
+  if (_cachedInternalSecret === null) {
+    _cachedInternalSecret = getHubConfig()?.internalSecret ?? "";
+  }
+  return _cachedInternalSecret ? { "x-hub-internal-secret": _cachedInternalSecret } : {};
+}
+
+/** Invalidate the cached internal secret (call after spawning a new hub). */
+export function invalidateInternalSecretCache(): void {
+  _cachedInternalSecret = null;
 }
 
 /**
@@ -108,7 +125,9 @@ export async function getHubPidFromHealth(): Promise<number | null> {
         res.on("end", () => {
           try {
             const json = JSON.parse(data);
-            resolve(json.pid && typeof json.pid === "number" ? json.pid : null);
+            // Validate strictly: must be a positive integer to avoid POSIX broadcast targets
+            const pid = json.pid;
+            resolve(Number.isInteger(pid) && pid > 0 ? pid : null);
           } catch {
             resolve(null);
           }
@@ -131,7 +150,8 @@ export async function getHubPidFromHealth(): Promise<number | null> {
  */
 export async function killStaleHub(): Promise<boolean> {
   const pid = await getHubPidFromHealth();
-  if (!pid) return false;
+  // Must be a positive integer — negative values are POSIX broadcast targets (kill(-1) = all processes)
+  if (!pid || pid <= 0 || !Number.isInteger(pid)) return false;
 
   try {
     process.kill(pid, "SIGTERM");
@@ -189,6 +209,8 @@ export async function spawnHub(): Promise<void> {
         // Detach from stdout/stderr to let the hub run independently
         child.stdout?.destroy();
         child.stderr?.destroy();
+        // Invalidate cached secret so next use reads the new hub's secret
+        invalidateInternalSecretCache();
         resolve();
       }
     });
@@ -250,6 +272,7 @@ export async function registerSession(
         headers: {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(body),
+          ...getInternalAuthHeaders(),
         },
         timeout: 5000,
       },
@@ -291,6 +314,7 @@ export async function unregisterSession(sessionId: string): Promise<void> {
         port: HUB_INTERNAL_PORT,
         path: `/api/sessions/${sessionId}`,
         method: "DELETE",
+        headers: getInternalAuthHeaders(),
         timeout: 3000,
       },
       () => resolve(),
@@ -316,6 +340,7 @@ export async function listSessions(): Promise<RegisteredSession[]> {
         port: HUB_INTERNAL_PORT,
         path: "/api/sessions",
         method: "GET",
+        headers: getInternalAuthHeaders(),
         timeout: 3000,
       },
       (res) => {
@@ -347,7 +372,7 @@ export async function listSessions(): Promise<RegisteredSession[]> {
 export async function stopHub(): Promise<boolean> {
   // Try from hub.json first
   const config = getHubConfig();
-  if (config) {
+  if (config && config.pid > 0 && Number.isInteger(config.pid)) {
     try {
       process.kill(config.pid, "SIGTERM");
       return true;
@@ -358,7 +383,7 @@ export async function stopHub(): Promise<boolean> {
 
   // Fall back to health endpoint for PID
   const pid = await getHubPidFromHealth();
-  if (!pid) return false;
+  if (!pid || pid <= 0 || !Number.isInteger(pid)) return false;
 
   try {
     process.kill(pid, "SIGTERM");
@@ -379,6 +404,7 @@ export async function sendHeartbeat(sessionId: string): Promise<void> {
         port: HUB_INTERNAL_PORT,
         path: `/api/sessions/${sessionId}/heartbeat`,
         method: "PUT",
+        headers: getInternalAuthHeaders(),
         timeout: 2000,
       },
       () => resolve(),

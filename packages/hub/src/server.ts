@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile, readdir, stat, realpath } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { join, extname, sep } from "node:path";
 import { homedir } from "node:os";
 import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
@@ -61,7 +61,14 @@ export function createDashboardServer(options: DashboardServerOptions) {
 
   // --- HTTP Server ---
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    let url: URL;
+    try {
+      url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Bad Request" }));
+      return;
+    }
     const providedToken = url.searchParams.get("token") || "";
     const ip = getClientIP(req);
 
@@ -92,6 +99,13 @@ export function createDashboardServer(options: DashboardServerOptions) {
       }
 
       rateLimiter.clearIP(ip);
+    }
+
+    // Prevent caching of any authenticated response — tokens must not persist in proxy/browser caches
+    if (!isStaticAsset) {
+      res.setHeader("Cache-Control", "no-store, private");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Referrer-Policy", "no-referrer");
     }
 
     // Serve API endpoints for dashboard
@@ -134,9 +148,9 @@ export function createDashboardServer(options: DashboardServerOptions) {
       const browsePath = rawPath.replace(/^~/, homeDir);
 
       try {
-        // Resolve to real path and verify it's under home directory
+        // Resolve to real path and verify it's under home directory (separator-aware)
         const resolved = await realpath(browsePath);
-        if (!resolved.startsWith(homeDir)) {
+        if (resolved !== homeDir && !resolved.startsWith(homeDir + sep)) {
           res.writeHead(403, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: "Access denied" }));
           return;
@@ -212,7 +226,14 @@ export function createDashboardServer(options: DashboardServerOptions) {
   const wss = new WebSocketServer({ noServer: true });
 
   httpServer.on("upgrade", (req, socket, head) => {
-    const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    let url: URL;
+    try {
+      url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    } catch {
+      socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+      socket.destroy();
+      return;
+    }
     const providedToken = url.searchParams.get("token") || "";
     const ip = getClientIP(req);
 
@@ -227,6 +248,26 @@ export function createDashboardServer(options: DashboardServerOptions) {
       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
       socket.destroy();
       return;
+    }
+
+    // Origin check: browser-originated WS upgrades must come from the same host
+    // (prevents cross-site WebSocket hijacking if a token leaks via referer/logs)
+    const origin = req.headers.origin;
+    if (origin) {
+      let originHost: string;
+      try {
+        originHost = new URL(origin).host;
+      } catch {
+        socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+      const requestHost = req.headers.host || "";
+      if (originHost !== requestHost) {
+        socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+        socket.destroy();
+        return;
+      }
     }
 
     rateLimiter.clearIP(ip);
@@ -252,6 +293,9 @@ export function createDashboardServer(options: DashboardServerOptions) {
   wss.on("connection", (ws: WebSocket) => {
     clients.add(ws);
     aliveMap.set(ws, true);
+
+    // Per-connection monotonic sequence counter for replay protection
+    let lastClientSeq = -1;
 
     // Send current session list
     const sessions = registry.getAll();
@@ -283,6 +327,13 @@ export function createDashboardServer(options: DashboardServerOptions) {
       }
       try {
         const msg = JSON.parse(plaintext);
+
+        // Replay protection: reject any message whose sequence number is not strictly
+        // greater than the last accepted one for this connection
+        if (typeof msg._seq === "number") {
+          if (msg._seq <= lastClientSeq) return;
+          lastClientSeq = msg._seq;
+        }
 
         switch (msg.type) {
           case "stop-session": {
@@ -333,8 +384,12 @@ export function createDashboardServer(options: DashboardServerOptions) {
             const cwd = rawCwd ? rawCwd.replace(/^~/, homeDir) : homeDir;
 
             try {
-              // Verify directory exists
+              // Verify directory exists and is confined to home (separator-aware)
               const resolved = await realpath(cwd);
+              if (resolved !== homeDir && !resolved.startsWith(homeDir + sep)) {
+                sendMsg(ws, { type: "session-create-error", error: "Access denied" });
+                break;
+              }
               const dirStat = await stat(resolved);
               if (!dirStat.isDirectory()) {
                 sendMsg(ws, { type: "session-create-error", error: "Not a directory" });

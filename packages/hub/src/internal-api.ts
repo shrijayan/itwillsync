@@ -1,10 +1,12 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { SessionRegistry, SessionRegistration } from "./registry.js";
 import type { WindowsFirewall } from "./windows-firewall.js";
+import { validateToken } from "./auth.js";
 
 export interface InternalApiOptions {
   registry: SessionRegistry;
   port: number;
+  internalSecret: string;
   windowsFirewall?: WindowsFirewall;
 }
 
@@ -14,7 +16,7 @@ export interface InternalApiOptions {
  * Bound to 127.0.0.1 — not accessible from the network.
  */
 export function createInternalApi(options: InternalApiOptions) {
-  const { registry, port } = options;
+  const { registry, port, internalSecret } = options;
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url || "/", `http://127.0.0.1:${port}`);
@@ -24,7 +26,7 @@ export function createInternalApi(options: InternalApiOptions) {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
 
     try {
-      // GET /api/health — hub health check
+      // GET /api/health — unauthenticated; returns only non-sensitive counters
       if (req.method === "GET" && pathname === "/api/health") {
         res.writeHead(200);
         res.end(JSON.stringify({
@@ -33,6 +35,22 @@ export function createInternalApi(options: InternalApiOptions) {
           sessions: registry.size,
           uptime: process.uptime(),
         }));
+        return;
+      }
+
+      // All other endpoints require:
+      // 1. Host header must be 127.0.0.1:<port> or localhost:<port> (DNS-rebinding defense)
+      // 2. X-Hub-Internal-Secret header matching the per-process secret (authentication)
+      const host = req.headers.host || "";
+      if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: "Invalid host" }));
+        return;
+      }
+      const providedSecret = (req.headers["x-hub-internal-secret"] as string) || "";
+      if (!validateToken(providedSecret, internalSecret)) {
+        res.writeHead(401);
+        res.end(JSON.stringify({ error: "Unauthorized" }));
         return;
       }
 
@@ -60,10 +78,11 @@ export function createInternalApi(options: InternalApiOptions) {
         const body = await readBody(req);
         const data = JSON.parse(body) as SessionRegistration;
 
-        // Validate required fields
-        if (!data.name || !data.port || !data.token || !data.agent || !data.pid) {
+        // pid must be a positive integer — negative values are POSIX broadcast targets
+        if (!data.name || !data.port || !data.token || !data.agent ||
+            !Number.isInteger(data.pid) || data.pid <= 0) {
           res.writeHead(400);
-          res.end(JSON.stringify({ error: "Missing required fields: name, port, token, agent, pid" }));
+          res.end(JSON.stringify({ error: "Missing or invalid required fields: name, port, token, agent, pid" }));
           return;
         }
 

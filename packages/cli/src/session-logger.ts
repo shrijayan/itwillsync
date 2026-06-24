@@ -21,10 +21,12 @@ export class SessionLogger {
 
   constructor(sessionId: string) {
     const logsDir = getLogsDir();
-    mkdirSync(logsDir, { recursive: true });
+    // 0o700: only owner can traverse/read the logs directory
+    mkdirSync(logsDir, { recursive: true, mode: 0o700 });
 
     this.logPath = join(logsDir, `${sessionId}.log`);
-    this.stream = createWriteStream(this.logPath, { flags: "a" });
+    // 0o600: only owner can read the log file (contains PTY transcripts with potential secrets)
+    this.stream = createWriteStream(this.logPath, { flags: "a", mode: 0o600 });
 
     this.flushTimer = setInterval(() => this.flush(), FLUSH_INTERVAL_MS);
   }
@@ -58,12 +60,13 @@ export class SessionLogger {
       this.stream.end(() => resolve());
     });
 
-    // Compress to gzip
+    // Compress to gzip (owner-only permissions preserved)
     try {
       const gzPath = this.logPath + ".gz";
       const source = createReadStream(this.logPath);
       const gzip = createGzip();
-      const dest = createWriteStream(gzPath);
+      // 0o600: same owner-only restriction on the compressed archive
+      const dest = createWriteStream(gzPath, { mode: 0o600 });
 
       await pipeline(source, gzip, dest);
 

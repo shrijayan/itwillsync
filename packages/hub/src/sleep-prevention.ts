@@ -225,17 +225,20 @@ export class SleepPrevention {
         }
       }
 
-      const writeResult = await this.runSudo(["tee", confPath], password, { stdin: modified });
-      if (!writeResult.success) {
+      // Use sudo -n (non-interactive) for write/restart: the runSudo("cat") call above
+      // authenticated sudo and cached the credential, so no password is needed on stdin.
+      // This prevents the password from being written to the world-readable confPath.
+      const writeResult = await this.runCommand("sudo", ["-n", "tee", confPath], { stdin: modified });
+      if (writeResult.exitCode !== 0) {
         return { success: false, error: "Failed to write logind.conf" };
       }
 
-      const restartResult = await this.runSudo(["systemctl", "restart", "systemd-logind"], password);
-      if (!restartResult.success) {
+      const restartResult = await this.runCommand("sudo", ["-n", "systemctl", "restart", "systemd-logind"]);
+      if (restartResult.exitCode !== 0) {
         try {
           const backup = readFileSync(backupPath, "utf-8");
-          await this.runSudo(["tee", confPath], password, { stdin: backup });
-          await this.runSudo(["systemctl", "restart", "systemd-logind"], password);
+          await this.runCommand("sudo", ["-n", "tee", confPath], { stdin: backup });
+          await this.runCommand("sudo", ["-n", "systemctl", "restart", "systemd-logind"]);
         } catch { /* best-effort restore */ }
         return { success: false, error: "Failed to restart systemd-logind" };
       }
