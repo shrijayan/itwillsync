@@ -49,6 +49,7 @@ describe("SessionRegistry.rename", () => {
 // --- Internal API management endpoint tests ---
 
 const TEST_PORT = 19964;
+const TEST_SECRET = "test-internal-secret";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function httpRequest(method: string, path: string, body?: object): Promise<{ status: number; data: any }> {
@@ -60,9 +61,12 @@ function httpRequest(method: string, path: string, body?: object): Promise<{ sta
         port: TEST_PORT,
         path,
         method,
-        headers: bodyStr
-          ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(bodyStr) }
-          : {},
+        headers: {
+          "x-hub-internal-secret": TEST_SECRET,
+          ...(bodyStr
+            ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(bodyStr) }
+            : {}),
+        },
       },
       (res) => {
         let data = "";
@@ -88,7 +92,7 @@ describe("Internal API — Session Management", () => {
 
   beforeAll(async () => {
     registry = new SessionRegistry();
-    api = createInternalApi({ registry, port: TEST_PORT });
+    api = createInternalApi({ registry, port: TEST_PORT, internalSecret: TEST_SECRET });
     await api.listen();
   });
 
