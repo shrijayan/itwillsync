@@ -14,6 +14,17 @@ function isVirtualInterface(name: string): boolean {
   return VIRTUAL_INTERFACE_PREFIXES.some((prefix) => name.startsWith(prefix));
 }
 
+function ipToNumber(ip: string): number {
+  return ip.split(".").reduce((acc, octet) => acc * 256 + parseInt(octet, 10), 0);
+}
+
+// Returns false for 198.18.0.0/15 (RFC 2544 benchmarking range used by WSL2 Hyper-V).
+// These IPs are not routable from phones on the local network.
+function isUsableLocalIP(ip: string): boolean {
+  const num = ipToNumber(ip);
+  return !(num >= ipToNumber("198.18.0.0") && num <= ipToNumber("198.19.255.255"));
+}
+
 /**
  * Returns the first non-loopback, non-internal IPv4 address found
  * on a physical network interface (skipping VPN/tunnel/VM interfaces).
@@ -30,7 +41,7 @@ export function getLocalIP(): string {
     for (const addr of addresses) {
       if (addr.family !== "IPv4" || addr.internal) continue;
 
-      if (!isVirtualInterface(name)) {
+      if (!isVirtualInterface(name) && isUsableLocalIP(addr.address)) {
         return addr.address;
       }
       fallback ??= addr.address;

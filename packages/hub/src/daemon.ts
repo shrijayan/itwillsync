@@ -22,8 +22,23 @@ export const HUB_INTERNAL_PORT = 7963;
 /** Seconds to wait after last session before auto-shutdown. */
 const AUTO_SHUTDOWN_DELAY_MS = 30_000;
 
+function getWindowsItwillsyncDir(): string | null {
+  const appData = process.env.APPDATA;
+  if (!appData || !/^[A-Za-z]:\\/.test(appData)) return null;
+  // Convert Windows path to WSL mount path: C:\foo\bar -> /mnt/c/foo/bar
+  const wslPath = appData
+    .replace(/^([A-Za-z]):\\/, (_, d) => `/mnt/${d.toLowerCase()}/`)
+    .replace(/\\/g, "/");
+  return join(wslPath, "itwillsync");
+}
+
 function getHubDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
+  if (process.env.ITWILLSYNC_CONFIG_DIR) return process.env.ITWILLSYNC_CONFIG_DIR;
+  if (process.env.WSL_DISTRO_NAME) {
+    const windowsDir = getWindowsItwillsyncDir();
+    if (windowsDir) return windowsDir;
+  }
+  return join(homedir(), ".itwillsync");
 }
 
 function getPidPath(): string {
@@ -206,6 +221,12 @@ async function main(): Promise<void> {
   });
 
   process.on("SIGINT", () => {
+    cleanup();
+    process.exit(0);
+  });
+
+  // SIGHUP is sent when terminal window closes (e.g. Windows WSL2)
+  process.on("SIGHUP", () => {
     cleanup();
     process.exit(0);
   });
