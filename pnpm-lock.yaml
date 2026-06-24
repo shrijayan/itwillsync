@@ -119,7 +119,7 @@ importers:
   packages/landing:
     devDependencies:
       typescript:
-        specifier: ^6.0.2
+        specifier: ^6.0.3
         version: 6.0.3
       vite:
         specifier: ^8.0.5
