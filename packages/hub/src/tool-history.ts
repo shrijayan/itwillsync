@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, dirname } from "node:path";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 interface ToolEntry {
   name: string;
@@ -14,8 +14,7 @@ interface ToolHistoryFile {
 const MAX_ENTRIES = 20;
 
 function getHistoryPath(): string {
-  const dir = process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-  return join(dir, "tool-history.json");
+  return join(getItwillsyncHomeDir(), "tool-history.json");
 }
 
 export class ToolHistory {

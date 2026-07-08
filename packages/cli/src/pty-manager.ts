@@ -66,6 +66,20 @@ export class PtyManager {
   /** The process ID of the spawned PTY process. */
   readonly pid: number;
 
+  // node-pty fires onData/onExit the instant they happen — even if nothing
+  // has called onData()/onExit() on this class yet. A command that exits
+  // fast (typo'd binary, immediate crash) can exit in under 20ms, which is
+  // faster than the `await registerSession()` hub round-trip that runs
+  // before index.ts registers onExit(). Without buffering, that exit (and
+  // any output printed right before it, e.g. the actual error message) is
+  // silently dropped forever and the CLI hangs. Subscribing here in the
+  // constructor — before any consumer has a chance to call onData/onExit —
+  // and replaying to whichever listener registers later closes that gap.
+  private dataBuffer: string[] = [];
+  private dataListeners: Array<(data: string) => void> = [];
+  private exitResult: { exitCode: number; signal?: number } | null = null;
+  private exitListeners: Array<(exitCode: number, signal?: number) => void> = [];
+
   constructor(command: string, args: string[]) {
     ensureSpawnHelperPermissions();
 
@@ -82,22 +96,46 @@ export class PtyManager {
     });
 
     this.pid = this.ptyProcess.pid;
+
+    this.ptyProcess.onData((data) => {
+      if (this.dataListeners.length > 0) {
+        for (const listener of this.dataListeners) listener(data);
+      } else {
+        this.dataBuffer.push(data);
+      }
+    });
+
+    this.ptyProcess.onExit(({ exitCode, signal }) => {
+      this.exitResult = { exitCode, signal };
+      for (const listener of this.exitListeners) listener(exitCode, signal);
+    });
   }
 
   /**
    * Register a callback for PTY output data.
+   * Replays any data received before this call, so a late registration
+   * (e.g. after an async hub round-trip) never misses early output.
    */
   onData(callback: (data: string) => void): void {
-    this.ptyProcess.onData(callback);
+    if (this.dataBuffer.length > 0) {
+      const buffered = this.dataBuffer;
+      this.dataBuffer = [];
+      for (const data of buffered) callback(data);
+    }
+    this.dataListeners.push(callback);
   }
 
   /**
    * Register a callback for when the PTY process exits.
+   * Fires immediately if the process already exited before this call, so a
+   * late registration never misses a fast exit.
    */
   onExit(callback: (exitCode: number, signal?: number) => void): void {
-    this.ptyProcess.onExit(({ exitCode, signal }) => {
-      callback(exitCode, signal);
-    });
+    if (this.exitResult) {
+      callback(this.exitResult.exitCode, this.exitResult.signal);
+      return;
+    }
+    this.exitListeners.push(callback);
   }
 
   /**

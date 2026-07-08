@@ -4,7 +4,7 @@ import { join, extname, sep } from "node:path";
 import { homedir } from "node:os";
 import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
-import { validateToken, RateLimiter } from "./auth.js";
+import { validateToken, RateLimiter } from "@itwillsync/shared/auth";
 import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto";
 import type { SessionRegistry } from "./registry.js";
 import type { PreviewCollector } from "./preview-collector.js";

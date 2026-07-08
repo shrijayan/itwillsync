@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { SessionRegistry, SessionRegistration } from "./registry.js";
 import type { WindowsFirewall } from "./windows-firewall.js";
-import { validateToken } from "./auth.js";
+import { validateToken } from "@itwillsync/shared/auth";
 
 export interface InternalApiOptions {
   registry: SessionRegistry;

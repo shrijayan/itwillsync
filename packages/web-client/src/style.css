@@ -104,7 +104,7 @@ html, body {
   height: calc(100% - 32px - var(--extra-keys-height, 0px));
   width: 100%;
   overflow-x: auto;   /* allow horizontal scroll when terminal overflows */
-  overflow-y: hidden;  /* vertical scroll handled by xterm viewport */
+  overflow-y: hidden;  /* vertical scroll has no native DOM scrollbar to hide (see below) */
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;  /* allow all native panning, disable double-tap zoom delay */
 }
@@ -115,6 +115,13 @@ html, body {
   padding: 4px;
 }
 
+/*
+ * NOTE: xterm.js v6 replaced its old native-overflow viewport with a
+ * VS Code-style virtual scrollbar (see main.ts's "Mobile vertical scroll
+ * handler" comment) that has no real scrollable DOM content — `overflow-y`
+ * here has no effect and is not what makes scrolling work on mobile.
+ * Kept only in case a future xterm.js version reintroduces native overflow.
+ */
 .xterm-viewport {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;

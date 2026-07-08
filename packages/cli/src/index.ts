@@ -1,5 +1,5 @@
 import { PtyManager } from "./pty-manager.js";
-import { generateToken } from "./auth.js";
+import { generateToken } from "@itwillsync/shared/auth";
 import { findAvailablePort, resolveSessionIP } from "./network.js";
 import { createSyncServer } from "./server.js";
 import { displayQR } from "./qr.js";

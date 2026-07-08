@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, dirname } from "node:path";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 export interface PersistedSession {
   id: string;
@@ -21,8 +21,7 @@ interface PersistedSessions {
 }
 
 function getStorePath(): string {
-  const dir = process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-  return join(dir, "sessions.json");
+  return join(getItwillsyncHomeDir(), "sessions.json");
 }
 
 export class SessionStore {

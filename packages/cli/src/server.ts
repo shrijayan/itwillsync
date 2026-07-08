@@ -5,7 +5,7 @@ import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import type { PtyManager } from "./pty-manager.js";
 import type { SessionLogger } from "./session-logger.js";
-import { validateToken } from "./auth.js";
+import { validateToken, RateLimiter } from "@itwillsync/shared/auth";
 import { deriveEncryptionKey, encrypt, decrypt } from "@itwillsync/shared/crypto";
 
 /** MIME type mapping for static file serving. */
@@ -127,6 +127,11 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
   const clients = new Set<WebSocket>();
   const aliveMap = new WeakMap<WebSocket, boolean>();
   const dropCounters = new WeakMap<WebSocket, number>();
+  const rateLimiter = new RateLimiter();
+
+  function getClientIP(req: IncomingMessage): string {
+    return req.socket.remoteAddress || "unknown";
+  }
 
   // Scrollback buffer: stores recent PTY output so reconnecting clients can catch up.
   // `seq` is a running character count — clients track it to request delta sync on reconnect.
@@ -168,12 +173,22 @@ export function createSyncServer(options: SyncServerOptions): SyncServer {
       return;
     }
     const providedToken = url.searchParams.get("token") || "";
+    const ip = getClientIP(req);
+
+    if (rateLimiter.isBlocked(ip)) {
+      socket.write("HTTP/1.1 429 Too Many Requests\r\n\r\n");
+      socket.destroy();
+      return;
+    }
 
     if (!validateToken(providedToken, token)) {
+      rateLimiter.recordFailure(ip);
       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
       socket.destroy();
       return;
     }
+
+    rateLimiter.clearIP(ip);
 
     wssServer.handleUpgrade(req, socket, head, (ws) => {
       wssServer.emit("connection", ws, req);

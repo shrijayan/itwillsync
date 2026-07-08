@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 export type NetworkingMode = "local" | "tailscale";
 
@@ -26,12 +26,8 @@ const DEFAULT_CONFIG: Config = {
   maxTerminalRows: 200,
 };
 
-export function getConfigDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-}
-
 export function getConfigPath(): string {
-  return join(getConfigDir(), "config.json");
+  return join(getItwillsyncHomeDir(), "config.json");
 }
 
 export function configExists(): boolean {
@@ -49,7 +45,7 @@ export function loadConfig(): Config {
 }
 
 export function saveConfig(config: Config): void {
-  const dir = getConfigDir();
+  const dir = getItwillsyncHomeDir();
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "config.json"),

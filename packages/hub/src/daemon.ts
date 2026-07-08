@@ -1,9 +1,9 @@
 import { writeFileSync, mkdirSync, chmodSync, unlinkSync, existsSync, readdirSync, statSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, type ChildProcess } from "node:child_process";
-import { generateToken } from "./auth.js";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
+import { generateToken } from "@itwillsync/shared/auth";
 import { SessionRegistry } from "./registry.js";
 import { SessionStore } from "./session-store.js";
 import { ToolHistory } from "./tool-history.js";
@@ -22,31 +22,12 @@ export const HUB_INTERNAL_PORT = 7963;
 /** Seconds to wait after last session before auto-shutdown. */
 const AUTO_SHUTDOWN_DELAY_MS = 30_000;
 
-function getWindowsItwillsyncDir(): string | null {
-  const appData = process.env.APPDATA;
-  if (!appData || !/^[A-Za-z]:\\/.test(appData)) return null;
-  // Convert Windows path to WSL mount path: C:\foo\bar -> /mnt/c/foo/bar
-  const wslPath = appData
-    .replace(/^([A-Za-z]):\\/, (_, d) => `/mnt/${d.toLowerCase()}/`)
-    .replace(/\\/g, "/");
-  return join(wslPath, "itwillsync");
-}
-
-function getHubDir(): string {
-  if (process.env.ITWILLSYNC_CONFIG_DIR) return process.env.ITWILLSYNC_CONFIG_DIR;
-  if (process.env.WSL_DISTRO_NAME) {
-    const windowsDir = getWindowsItwillsyncDir();
-    if (windowsDir) return windowsDir;
-  }
-  return join(homedir(), ".itwillsync");
-}
-
 function getPidPath(): string {
-  return join(getHubDir(), "hub.pid");
+  return join(getItwillsyncHomeDir(), "hub.pid");
 }
 
 function getHubConfigPath(): string {
-  return join(getHubDir(), "hub.json");
+  return join(getItwillsyncHomeDir(), "hub.json");
 }
 
 /** Validate a tool name: alphanumeric, hyphens, underscores, dots only. */
@@ -74,7 +55,7 @@ function spawnSession(
 }
 
 async function main(): Promise<void> {
-  const hubDir = getHubDir();
+  const hubDir = getItwillsyncHomeDir();
   // 0o700: only owner can traverse; mode is set on creation and enforced after
   mkdirSync(hubDir, { recursive: true, mode: 0o700 });
   chmodSync(hubDir, 0o700);

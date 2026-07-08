@@ -3,13 +3,13 @@ import { createGzip } from "node:zlib";
 import { pipeline } from "node:stream/promises";
 import { createReadStream } from "node:fs";
 import { join } from "node:path";
-import { getConfigDir } from "./config.js";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 const FLUSH_INTERVAL_MS = 100;
 const BUFFER_SIZE = 4096;
 
 function getLogsDir(): string {
-  return join(getConfigDir(), "logs");
+  return join(getItwillsyncHomeDir(), "logs");
 }
 
 export class SessionLogger {
