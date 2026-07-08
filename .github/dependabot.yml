@@ -1,29 +1,23 @@
 version: 2
 updates:
+  # One npm entry covers the pnpm workspace root AND every package under
+  # packages/* (cli, web-client, hub, landing, docs, shared). All of them
+  # share a single root pnpm-lock.yaml, so `group-by: dependency-name` makes
+  # Dependabot open ONE PR per dependency that updates it everywhere it's
+  # used, instead of one PR per package. This also keeps the same dependency
+  # (e.g. vitest, vite) from drifting to different versions in different
+  # packages over time, and automatically covers any package added under
+  # packages/ later without editing this file.
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+      - "/packages/*"
     schedule:
       interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/packages/cli"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/packages/web-client"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/packages/hub"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/packages/landing"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "npm"
-    directory: "/packages/docs"
-    schedule:
-      interval: "daily"
+    groups:
+      workspace-dependencies:
+        group-by: dependency-name
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

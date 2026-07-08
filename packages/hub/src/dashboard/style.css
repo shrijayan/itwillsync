@@ -534,6 +534,10 @@ html, body {
   max-height: 85vh;
   max-height: 85dvh;
   overflow-y: auto;
+  /* Prevent scroll chaining: on iOS, scrolling past the top/bottom of this
+   * modal would otherwise scroll the page behind it (rubber-band bug). */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 20px;
   animation: slideUp 0.2s ease;
 }
@@ -791,6 +795,9 @@ html, body {
   max-height: 50vh;
   max-height: 50dvh;
   overflow-y: auto;
+  /* Same scroll-chaining fix as .modal-content above. */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .browse-item {

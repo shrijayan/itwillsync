@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
-import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { request } from "node:http";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 /** Port for the hub's internal API (localhost only). */
 export const HUB_INTERNAL_PORT = 7963;
@@ -45,12 +45,8 @@ export interface RegisteredSession {
   status: string;
 }
 
-function getHubDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-}
-
 function getHubConfigPath(): string {
-  return join(getHubDir(), "hub.json");
+  return join(getItwillsyncHomeDir(), "hub.json");
 }
 
 /** Cached internal secret — read once from hub.json, reused across requests. */
@@ -167,7 +163,7 @@ export async function killStaleHub(): Promise<boolean> {
   }
 
   // Clean up any leftover config files
-  const hubDir = getHubDir();
+  const hubDir = getItwillsyncHomeDir();
   try { unlinkSync(join(hubDir, "hub.json")); } catch { /* ignore cleanup */ }
   try { unlinkSync(join(hubDir, "hub.pid")); } catch { /* ignore cleanup */ }
 

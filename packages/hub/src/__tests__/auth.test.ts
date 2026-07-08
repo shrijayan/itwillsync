@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { generateToken, validateToken, RateLimiter } from "../auth.js";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { generateToken, validateToken, RateLimiter } from "@itwillsync/shared/auth";
 
 describe("generateToken", () => {
   it("should return a 64-character hex string", () => {
@@ -81,5 +81,50 @@ describe("RateLimiter", () => {
     limiter.clearIP("1.2.3.4");
 
     expect(limiter.isBlocked("1.2.3.4")).toBe(false);
+  });
+
+  describe("stale entry pruning (memory growth guard)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("prunes an IP that failed once (below the block threshold) and never returned", () => {
+      limiter.recordFailure("1.2.3.4"); // 1 of 3 — never actually blocked
+      expect(limiter.size).toBe(1);
+
+      // Long past blockDurationMs (1s) with no further activity from this IP.
+      vi.advanceTimersByTime(5000);
+
+      // Pruning piggy-backs on any call; use an unrelated IP to trigger the sweep.
+      limiter.isBlocked("9.9.9.9");
+
+      expect(limiter.size).toBe(0);
+    });
+
+    it("never prunes an IP that is still inside its active block window", () => {
+      // Force an initial sweep so the internal throttle clock (lastPruneAt) is
+      // anchored well before the block below, so a later sweep is actually due
+      // (not just throttled) while the entry is still legitimately blocked.
+      vi.advanceTimersByTime(1200);
+      limiter.isBlocked("force-sweep-1");
+
+      vi.advanceTimersByTime(400);
+      limiter.recordFailure("1.2.3.4");
+      limiter.recordFailure("1.2.3.4");
+      limiter.recordFailure("1.2.3.4"); // 3rd failure -> blocked for 1000ms from now
+      expect(limiter.isBlocked("1.2.3.4")).toBe(true);
+
+      // Advance past the throttle window (so a sweep is due again) while
+      // comfortably still inside the block window (350ms of margin).
+      vi.advanceTimersByTime(650);
+      limiter.isBlocked("force-sweep-2");
+
+      expect(limiter.size).toBe(1);
+      expect(limiter.isBlocked("1.2.3.4")).toBe(true);
+    });
   });
 });

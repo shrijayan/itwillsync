@@ -5,13 +5,15 @@
   "type": "module",
   "exports": {
     "./crypto": "./src/crypto.ts",
-    "./crypto-browser": "./src/crypto-browser.ts"
+    "./crypto-browser": "./src/crypto-browser.ts",
+    "./paths": "./src/paths.ts",
+    "./auth": "./src/auth.ts"
   },
   "dependencies": {
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
-    "@types/node": "^25.5.2",
+    "@types/node": "^26.1.1",
     "typescript": "^6.0.3"
   }
 }

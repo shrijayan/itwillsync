@@ -1,7 +1,7 @@
 import { spawn, execFileSync } from "node:child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 interface FlagFileData {
   rules: Array<{ name: string; port: number }>;
@@ -12,9 +12,6 @@ const COMMAND_TIMEOUT_MS = 10_000;
 const SYNC_TIMEOUT_MS = 5_000;
 const RULE_PREFIX = "itwillsync";
 
-function getHubDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-}
 
 export class WindowsFirewall {
   private rules = new Map<string, number>();
@@ -23,7 +20,7 @@ export class WindowsFirewall {
 
   constructor() {
     this.isWindows = process.platform === "win32";
-    this.flagFilePath = join(getHubDir(), "firewall-rules.json");
+    this.flagFilePath = join(getItwillsyncHomeDir(), "firewall-rules.json");
     if (this.isWindows) {
       this.checkOrphanedRules();
     }

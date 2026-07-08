@@ -40,7 +40,6 @@ packages/
 │       ├── hub-client.ts    Hub discovery and registration
 │       ├── server.ts        HTTP + WebSocket server
 │       ├── pty-manager.ts   PTY wrapping (node-pty)
-│       ├── auth.ts          Token generation + validation
 │       ├── network.ts       IP resolution, port finding
 │       ├── qr.ts            QR code display
 │       ├── config.ts        Config persistence
@@ -56,8 +55,13 @@ packages/
 │       ├── preview-collector.ts  Live preview data
 │       ├── session-store.ts     Session persistence to disk
 │       ├── tool-history.ts      Recently used agent tracking
-│       ├── auth.ts             Token + rate limiting
 │       └── dashboard/          Web UI (vanilla TS)
+├── shared/        Code shared by cli and hub (bundled at build time)
+│   └── src/
+│       ├── auth.ts           Token generation, validation, rate limiting
+│       ├── paths.ts          Shared config/state directory resolution (WSL-aware)
+│       ├── crypto.ts         E2E encryption (Node)
+│       └── crypto-browser.ts E2E encryption (browser)
 ├── web-client/    Browser terminal (xterm.js)
 ├── landing/       Marketing website
 └── docs/          This documentation (VitePress)

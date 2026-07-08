@@ -47,6 +47,12 @@ if (hubUrl) {
   (backBtn as HTMLAnchorElement).href = hubUrl;
 }
 
+// --- Desktop vs. mobile detection ---
+// Same media query as the "hide extra keys on desktop" rule in style.css.
+// Used below to pick the renderer (WebGL vs. canvas) and whether xterm should
+// animate scrolling (see smoothScrollDuration comment for why this matters).
+const isDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
 // --- Terminal Setup ---
 const terminal = new Terminal({
   cursorBlink: true,
@@ -75,7 +81,13 @@ const terminal = new Terminal({
     brightWhite: "#ffffff",
   },
   allowProposedApi: true,
-  smoothScrollDuration: 125,
+  // Only animate scroll on desktop (mouse wheel notches feel better eased).
+  // On mobile, scroll is driven by the touchmove handler below, which calls
+  // scrollLines() many times per second — animating each call fights the
+  // previous one and can leave the screen looking frozen mid-swipe, only
+  // catching up once the finger lifts. Touch scroll must track 1:1, so it
+  // needs smoothScrollDuration off entirely.
+  smoothScrollDuration: isDesktop ? 125 : 0,
 });
 
 const fitAddon = new FitAddon();
@@ -84,7 +96,6 @@ terminal.open(terminalContainer);
 
 // Load WebGL renderer only on desktop — on mobile, the canvas renderer provides
 // smoother native touch scrolling. Same media query as style.css extra-keys rule.
-const isDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 if (isDesktop) {
   try {
     const webglAddon = new WebglAddon();

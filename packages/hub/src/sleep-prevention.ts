@@ -1,7 +1,7 @@
 import { spawn, execFileSync } from "node:child_process";
 import { writeFileSync, readFileSync, unlinkSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { getItwillsyncHomeDir } from "@itwillsync/shared/paths";
 
 export interface SleepPreventionState {
   enabled: boolean;
@@ -21,9 +21,6 @@ const SUPPORTED_PLATFORMS = new Set(["darwin", "win32", "linux"]);
 const COMMAND_TIMEOUT_MS = 10_000;
 const SYNC_TIMEOUT_MS = 5_000;
 
-function getHubDir(): string {
-  return process.env.ITWILLSYNC_CONFIG_DIR || join(homedir(), ".itwillsync");
-}
 
 export class SleepPrevention {
   private enabled = false;
@@ -35,7 +32,7 @@ export class SleepPrevention {
 
   constructor() {
     this.platform = process.platform;
-    this.flagFilePath = join(getHubDir(), "sleep-prevention.json");
+    this.flagFilePath = join(getItwillsyncHomeDir(), "sleep-prevention.json");
     this.checkOrphanedFlag();
   }
 
@@ -198,7 +195,7 @@ export class SleepPrevention {
 
   private async enableLinux(password: string): Promise<{ success: boolean; error?: string }> {
     const confPath = "/etc/systemd/logind.conf";
-    const backupPath = join(getHubDir(), "logind.conf.backup");
+    const backupPath = join(getItwillsyncHomeDir(), "logind.conf.backup");
 
     try {
       const readResult = await this.runSudo(["cat", confPath], password, { captureStdout: true });
@@ -250,7 +247,7 @@ export class SleepPrevention {
   }
 
   private async disableLinux(): Promise<boolean> {
-    const backupPath = join(getHubDir(), "logind.conf.backup");
+    const backupPath = join(getItwillsyncHomeDir(), "logind.conf.backup");
     if (!existsSync(backupPath)) return true;
 
     try {
@@ -266,7 +263,7 @@ export class SleepPrevention {
   }
 
   private revertLogindConfSync(): void {
-    const backupPath = join(getHubDir(), "logind.conf.backup");
+    const backupPath = join(getItwillsyncHomeDir(), "logind.conf.backup");
     if (!existsSync(backupPath)) return;
 
     try {
