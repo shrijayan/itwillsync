@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 
 /**
  * Convert a Windows path (as returned by %APPDATA%) into its WSL mount-point
@@ -37,7 +37,13 @@ export function getItwillsyncHomeDir(): string {
 
   if (process.env.WSL_DISTRO_NAME && process.env.APPDATA) {
     const wslMountPath = toWslMountPath(process.env.APPDATA);
-    if (wslMountPath) return join(wslMountPath, "itwillsync");
+    // Always join with posix (forward-slash) semantics here: this branch
+    // only ever means something as a WSL/Linux-side path, so it must stay
+    // "/mnt/c/..." even if this code is ever exercised under a Windows
+    // (backslash-path) build of Node — `join()` from "node:path" would
+    // otherwise normalize separators to "\" on win32 and produce a broken,
+    // unusable path.
+    if (wslMountPath) return posix.join(wslMountPath, "itwillsync");
   }
 
   return join(homedir(), ".itwillsync");
