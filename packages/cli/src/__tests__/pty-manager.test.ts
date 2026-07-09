@@ -6,8 +6,16 @@ import { PtyManager } from "../pty-manager.js";
 // (e.g. /bin/echo doesn't exist on Windows).
 const NODE = process.execPath;
 
+// Windows' ConPTY backend reports child-process exit noticeably later than
+// a real Unix PTY does — on loaded CI runners the gap between "child called
+// process.exit()" and node-pty's onExit firing can approach ~2s, vs. low
+// single-digit ms on Linux/macOS. All timeouts below are sized generously
+// (and identically across platforms, rather than branching on process.platform)
+// so the same assertions are meaningful everywhere without flaking on Windows.
+const DEFAULT_WAIT_MS = 4000;
+
 /** Wait for a condition to become true, polling every few ms. */
-async function waitFor(check: () => boolean, timeoutMs = 2000): Promise<void> {
+async function waitFor(check: () => boolean, timeoutMs = DEFAULT_WAIT_MS): Promise<void> {
   const start = Date.now();
   while (!check()) {
     if (Date.now() - start > timeoutMs) throw new Error("waitFor timed out");
@@ -34,7 +42,7 @@ describe("PtyManager", () => {
     await waitFor(() => exitCode !== null);
     expect(data).toContain("hello");
     expect(exitCode).toBe(3);
-  });
+  }, DEFAULT_WAIT_MS + 1000);
 
   it("does not lose the exit event when onExit() is registered after the process has already exited", async () => {
     // Exits essentially instantly — well under the ~20ms window where a
@@ -49,9 +57,9 @@ describe("PtyManager", () => {
     let exitCode: number | null = null;
     manager.onExit((code) => { exitCode = code; });
 
-    await waitFor(() => exitCode !== null, 500);
+    await waitFor(() => exitCode !== null);
     expect(exitCode).toBe(7);
-  });
+  }, DEFAULT_WAIT_MS + 1000);
 
   it("does not lose output printed before onData() is registered", async () => {
     manager = new PtyManager(NODE, ["-e", "process.stdout.write('early-output'); process.exit(0);"]);
@@ -63,9 +71,9 @@ describe("PtyManager", () => {
     manager.onData((chunk) => { data += chunk; });
     manager.onExit(() => { exited = true; });
 
-    await waitFor(() => exited, 500);
+    await waitFor(() => exited);
     expect(data).toContain("early-output");
-  });
+  }, DEFAULT_WAIT_MS + 1000);
 
   it("supports multiple onData listeners, each still receiving all data", async () => {
     manager = new PtyManager(NODE, ["-e", "process.stdout.write('multi'); process.exit(0);"]);
@@ -75,10 +83,10 @@ describe("PtyManager", () => {
     manager.onData((chunk) => { a += chunk; });
     manager.onData((chunk) => { b += chunk; });
 
-    await waitFor(() => a.includes("multi") && b.includes("multi"), 500);
+    await waitFor(() => a.includes("multi") && b.includes("multi"));
     expect(a).toContain("multi");
     expect(b).toContain("multi");
-  });
+  }, DEFAULT_WAIT_MS + 1000);
 
   it("clamps resize dimensions and ignores resize after exit", async () => {
     manager = new PtyManager(NODE, ["-e", "setTimeout(() => process.exit(0), 200);"]);
@@ -89,10 +97,10 @@ describe("PtyManager", () => {
 
     let exited = false;
     manager.onExit(() => { exited = true; });
-    await waitFor(() => exited, 1000);
+    await waitFor(() => exited);
 
     // Resizing (and killing) an already-exited process must not throw.
     expect(() => manager!.resize(80, 24)).not.toThrow();
     expect(() => manager!.kill()).not.toThrow();
-  });
+  }, DEFAULT_WAIT_MS + 1000);
 });
