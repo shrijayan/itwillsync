@@ -21,6 +21,7 @@
     "overrides": {
       "handlebars": ">=4.7.9",
       "js-yaml": ">=4.2.0",
+      "gray-matter>js-yaml": "^3.13.1",
       "undici": ">=7.28.0 <8.0.0"
     }
   },
