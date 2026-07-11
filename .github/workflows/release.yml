@@ -44,6 +44,15 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
+      # Node 22's bundled npm (10.x) predates npm's OIDC "Trusted Publishing" support
+      # (needs npm >=11.5.1) - without this, @semantic-release/npm's own OIDC handshake
+      # succeeds (it has its own JS logic for that), but the actual `npm publish`
+      # child process it shells out to has no idea how to use the token and fails
+      # with ENEEDAUTH. This has nothing to do with .nvmrc's Node version for the
+      # rest of the build - only upgrading npm itself here.
+      - name: Upgrade npm for OIDC trusted-publishing support
+        run: npm install -g npm@11
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
