@@ -242,3 +242,4 @@ Fixed all 16 security vulnerabilities from the 2026-05-19 security report.
 - **LOW #16**: `/api/browse` and `create-session` use separator-aware path check (`resolved === homeDir || resolved.startsWith(homeDir + sep)`) instead of prefix-only `startsWith(homeDir)`.
 
 Build: `pnpm run build` passes with no errors.
+
