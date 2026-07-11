@@ -36,14 +36,13 @@ Any terminal-based tool. If you can run it in a terminal, itwillsync can sync it
 
 ### How does my phone connect?
 
-Your phone connects over your local WiFi network (default), Tailscale, or a Cloudflare tunnel. When you run `itwillsync`, a QR code appears in your terminal. Scan it on your phone — it opens a browser-based terminal with the auth token embedded in the URL.
+Your phone connects over your local WiFi network (default) or Tailscale. When you run `itwillsync`, a QR code appears in your terminal. Scan it on your phone — it opens a browser-based terminal with the auth token embedded in the URL.
 
 ### What if my phone is on a different WiFi network?
 
-Use Tailscale or Cloudflare tunnel:
+Use Tailscale:
 
 - **Tailscale**: Install Tailscale on both your computer and phone. Run `itwillsync --tailscale claude`. Works from any network.
-- **Cloudflare Tunnel**: Run `itwillsync --tunnel cloudflare claude`. Creates a temporary public URL (requires `cloudflared` installed).
 
 ### What happens if the WiFi drops?
 
@@ -79,7 +78,7 @@ The QR code encodes the full session URL including the auth token. This is how y
 
 ### Can someone intercept my terminal data?
 
-On a local network, data travels directly between your computer and phone. With E2E encryption enabled, even if someone captures the packets, the data is encrypted with NaCl secretbox. When using Cloudflare tunnel, the data passes through Cloudflare's infrastructure but is encrypted end-to-end.
+On a local network, data travels directly between your computer and phone. With E2E encryption enabled, even if someone captures the packets, the data is encrypted with NaCl secretbox. When using Tailscale, the data passes through your private tailnet and is also encrypted end-to-end.
 
 ---
 
@@ -115,7 +114,7 @@ Long-running agents can be interrupted if your computer goes to sleep. The dashb
 1. Make sure your phone and computer are on the same WiFi network
 2. Check that no firewall is blocking the port (default: 7962 for dashboard, 7964+ for sessions)
 3. Try `itwillsync --localhost` to verify the server works, then switch back
-4. If on different networks, use `--tailscale` or `--tunnel cloudflare`
+4. If on different networks, use `--tailscale`
 
 ### Agent not found
 

@@ -135,7 +135,6 @@ If it runs in a terminal, itwillsync can sync it.
 |------|---------|------|
 | **Local WiFi** (default) | `npx itwillsync claude` | Phone on same network |
 | **Tailscale** | `npx itwillsync --tailscale claude` | Any network, anywhere |
-| **Cloudflare Tunnel** | `npx itwillsync --tunnel cloudflare claude` | Remote, no VPN needed |
 | **Localhost** | `npx itwillsync --localhost claude` | Same machine only |
 
 On first run, a setup wizard detects your network and saves your preference.
@@ -156,11 +155,10 @@ npx itwillsync setup
 
 | Flag | Description |
 |------|-------------|
-| `--port <number>` | Port to listen on (default: 3456) |
+| `--port <number>` | Port to listen on (default: 7964) |
 | `--localhost` | Bind to 127.0.0.1 only |
 | `--tailscale` | Use Tailscale for this session |
 | `--local` | Use local WiFi for this session |
-| `--tunnel <provider>` | Use a tunnel for remote access (cloudflare) |
 | `--no-qr` | Don't display QR code |
 | `setup` | Run the setup wizard |
 | `-h, --help` | Show help |

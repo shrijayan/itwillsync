@@ -6,7 +6,7 @@ description: "Install itwillsync via npx or npm. Requires Node.js 20+. Works on 
 
 ## Requirements
 
-- **Node.js 22+** (Node 24 is not yet supported due to node-pty compatibility)
+- **Node.js 20+** (20 and 22 are both tested in CI; Node 24 hasn't been validated yet)
 - A terminal-based coding agent (Claude Code, Aider, etc.) or just `bash`
 
 ## Quick Run (No Install)
@@ -35,10 +35,15 @@ itwillsync bash
 
 ## Node Version
 
-itwillsync uses [node-pty](https://github.com/nicktaf/node-pty) for terminal emulation, which requires native bindings. **Node 22 is required** (Node 24 is not yet supported). If you use [nvm](https://github.com/nvm-sh/nvm), the project includes an `.nvmrc` file:
+itwillsync uses [node-pty](https://github.com/microsoft/node-pty) for terminal emulation, which
+requires native bindings. Its prebuilt binaries are N-API based (ABI-stable across Node major
+versions), so **Node 20+ works** — CI tests both Node 20 and 22 on every change. Node 24 just
+hasn't been added to that test matrix yet, not a known incompatibility. If you use
+[nvm](https://github.com/nvm-sh/nvm), the project includes an `.nvmrc` file pinned to the version
+this repo is developed against:
 
 ```bash
-nvm use  # switches to Node 22
+nvm use  # switches to the project's default dev version
 ```
 
 ## First Run

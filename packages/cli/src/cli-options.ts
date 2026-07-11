@@ -68,7 +68,15 @@ export function parseArgs(argv: string[]): CliOptions {
       options.command = args.slice(i + 1);
       break;
     } else if (arg === "--port" && i + 1 < args.length) {
-      options.port = parseInt(args[i + 1], 10);
+      const rawPort = args[i + 1];
+      const parsedPort = Number(rawPort);
+      if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+        console.error(
+          `Error: Invalid --port value "${rawPort}". Must be an integer between 1 and 65535.\n`,
+        );
+        process.exit(1);
+      }
+      options.port = parsedPort;
       i += 2;
     } else if (arg === "--localhost") {
       options.localhost = true;

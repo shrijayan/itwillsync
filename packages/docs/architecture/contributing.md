@@ -11,7 +11,7 @@ description: "Contributing to itwillsync: development setup, monorepo structure,
 git clone https://github.com/shrijayan/itwillsync
 cd itwillsync
 
-# Use Node 22 (required for node-pty)
+# Use the project's Node version (20+ required; .nvmrc pins the tested default)
 nvm use
 
 # Install dependencies

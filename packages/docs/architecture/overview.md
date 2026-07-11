@@ -81,7 +81,7 @@ The root `pnpm build` handles this automatically.
 
 | Component | Technology |
 |-----------|-----------|
-| Runtime | Node.js 22+ |
+| Runtime | Node.js 20+ |
 | Language | TypeScript (ESM) |
 | Build (CLI) | tsup |
 | Build (web) | Vite |

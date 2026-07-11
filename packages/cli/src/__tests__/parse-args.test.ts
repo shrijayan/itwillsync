@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { parseArgs, DEFAULT_PORT } from "../cli-options.js";
 
 // Helper: simulate argv as if node ran `itwillsync <...args>`
@@ -45,6 +45,33 @@ describe("parseArgs", () => {
   it("parses --port with value", () => {
     const opts = parseArgs(argv("--port", "8080", "--", "bash"));
     expect(opts.port).toBe(8080);
+  });
+
+  it("exits with an error on a non-numeric --port value", () => {
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((() => {
+      throw new Error("process.exit called");
+    }) as unknown) as typeof process.exit);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => parseArgs(argv("--port", "abc", "--", "bash"))).toThrow("process.exit called");
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid --port value"));
+
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("exits with an error on an out-of-range --port value", () => {
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(((() => {
+      throw new Error("process.exit called");
+    }) as unknown) as typeof process.exit);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => parseArgs(argv("--port", "99999", "--", "bash"))).toThrow("process.exit called");
+    expect(exitSpy).toHaveBeenCalledWith(1);
+
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it("parses --localhost flag", () => {

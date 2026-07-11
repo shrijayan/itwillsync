@@ -320,9 +320,9 @@ export class SleepPrevention {
         resolve({ success: false, error: err.message });
       });
 
-      proc.stdin.write(password + "\n");
-      if (opts?.stdin) proc.stdin.write(opts.stdin);
-      proc.stdin.end();
+      proc.stdin!.write(password + "\n");
+      if (opts?.stdin) proc.stdin!.write(opts.stdin);
+      proc.stdin!.end();
     });
   }
 
