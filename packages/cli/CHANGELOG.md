@@ -1,3 +1,30 @@
+# [1.10.0](https://github.com/shrijayan/itwillsync/compare/v1.9.1...v1.10.0) (2026-07-11)
+
+
+### Bug Fixes
+
+* apply typescript 6.0.3 bump and update lockfile ([969360b](https://github.com/shrijayan/itwillsync/commit/969360bd4c812c6c78cf1966a7828652642249bb))
+* apply typescript 6.0.3 bump and update lockfile ([7e985bf](https://github.com/shrijayan/itwillsync/commit/7e985bf2ad5aa0d2b9105391a277aae9aec59982))
+* apply typescript 6.0.3 bump and update lockfile ([cff0ef7](https://github.com/shrijayan/itwillsync/commit/cff0ef794d8e7c453d63e0ebd09932649b7266e8))
+* apply typescript 6.0.3 bump and update lockfile ([#129](https://github.com/shrijayan/itwillsync/issues/129)) ([a76ecf2](https://github.com/shrijayan/itwillsync/commit/a76ecf282540f04ac431a9f114830205144e0fd6))
+* **ci:** make the self-evolving pipeline actually self-evolving ([390cbd4](https://github.com/shrijayan/itwillsync/commit/390cbd4cac5b1fc6afed6803cc8481e26a0ad380))
+* **ci:** use RELEASE_TOKEN + rebase merge for dependabot auto-merge ([e8040fd](https://github.com/shrijayan/itwillsync/commit/e8040fdc82bb6fa613b56d73f3e53d61449ec65a))
+* **deps:** scope js-yaml override so gray-matter keeps its compatible v3 ([e542391](https://github.com/shrijayan/itwillsync/commit/e542391b079bf0db332b18186e8c60144beb8b57)), closes [#180](https://github.com/shrijayan/itwillsync/issues/180)
+* finish uncommitted cleanup - dead docs, port validation, tsc gaps ([086c290](https://github.com/shrijayan/itwillsync/commit/086c29056a0159a8d88632e494c3780c98407cc0))
+* integrate Windows Firewall management for session connectivity ([52e0640](https://github.com/shrijayan/itwillsync/commit/52e0640fe7ee5cdf38b2fce67ee79a800bc8feca))
+* prevent flaky "throws on tampered ciphertext" test ([5f185d1](https://github.com/shrijayan/itwillsync/commit/5f185d14fee286360a0952fc813278dea8c9ec93))
+* prevent release workflow infinite loop ([49d2527](https://github.com/shrijayan/itwillsync/commit/49d25274c503d5e6cffdfcc53f8efb539b55c074))
+* resolve CodeQL code scanning security alerts ([0965ab2](https://github.com/shrijayan/itwillsync/commit/0965ab25312a2ac17727e24d32d0a66b8a9fcec3))
+* resolve WSL2/Windows daemon and network issues ([#145](https://github.com/shrijayan/itwillsync/issues/145), [#146](https://github.com/shrijayan/itwillsync/issues/146), [#147](https://github.com/shrijayan/itwillsync/issues/147)) ([#178](https://github.com/shrijayan/itwillsync/issues/178)) ([05281cf](https://github.com/shrijayan/itwillsync/commit/05281cf159668e7cc89238cb73e3c6b13a93746e))
+* revert getHubDir path validation that introduced CodeQL alerts ([31c64a3](https://github.com/shrijayan/itwillsync/commit/31c64a3d58b3fe11aa4e6af34ea8c12315c97f2e))
+* revert log sanitization that triggers CodeQL log-injection alert ([e2a7ab4](https://github.com/shrijayan/itwillsync/commit/e2a7ab4fa3ee0cc701571817ada71b1ca6f4e8bd))
+* **shared:** force posix path join for WSL AppData redirect ([b0ef597](https://github.com/shrijayan/itwillsync/commit/b0ef5972722a625d586a92b25cfcb06d96d7ae31))
+
+
+### Features
+
+* enhance security and performance by adding internal secret handling and replay protection ([#179](https://github.com/shrijayan/itwillsync/issues/179)) ([c68b11b](https://github.com/shrijayan/itwillsync/commit/c68b11b848702e19f9321e75a69f48962c7891e9))
+
 ## [1.9.2](https://github.com/shrijayan/itwillsync/compare/v1.9.1...v1.9.2) (2026-03-23)
 
 
