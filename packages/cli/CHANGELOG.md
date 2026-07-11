@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/shrijayan/itwillsync/compare/v1.10.1...v1.10.2) (2026-07-11)
+
+
+### Bug Fixes
+
+* **security:** patch linkify-it ReDoS (CVE-2026-48801, GHSA-22p9-wv53-3rq4) ([a21c005](https://github.com/shrijayan/itwillsync/commit/a21c005dd35f5f83780562afa7be8664af04b916)), closes [#58](https://github.com/shrijayan/itwillsync/issues/58)
+
 ## [1.10.1](https://github.com/shrijayan/itwillsync/compare/v1.10.0...v1.10.1) (2026-07-11)
 
 
