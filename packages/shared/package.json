@@ -3,6 +3,9 @@
   "version": "1.9.2",
   "private": true,
   "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "exports": {
     "./crypto": "./src/crypto.ts",
     "./crypto-browser": "./src/crypto-browser.ts",

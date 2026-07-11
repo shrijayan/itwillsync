@@ -1,7 +1,18 @@
 name: Dependabot Auto-Merge
 
+# pull_request_target, not pull_request: GitHub treats ANY workflow run triggered by a
+# Dependabot pull_request/push/pull_request_review(_comment) event as if it came from a
+# fork - it gets a read-only GITHUB_TOKEN and NO access to any repo secrets at all,
+# regardless of what `permissions:`/`env:` this file declares (confirmed via GitHub's own
+# docs: "Troubleshooting Dependabot on GitHub Actions"). That silently made every step
+# below a no-op since this workflow was added - `gh run list` showed zero runs, ever, even
+# though the branch and PRs looked otherwise fine. pull_request_target is exempt from that
+# restriction and gets normal repo-level permissions/secrets. This is the textbook-safe use
+# of pull_request_target (unlike the common misuse of it): there is no `actions/checkout`
+# step here, so no untrusted PR code is ever checked out or executed with these elevated
+# permissions - every step only calls the `gh` CLI against the PR's metadata/API.
 on:
-  pull_request:
+  pull_request_target:
 
 permissions:
   contents: write
@@ -9,7 +20,7 @@ permissions:
 
 jobs:
   auto-merge:
-    if: github.actor == 'dependabot[bot]'
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Dependabot metadata

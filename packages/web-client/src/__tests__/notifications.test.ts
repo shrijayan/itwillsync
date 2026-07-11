@@ -36,7 +36,7 @@ function createMockAudioContextObj(state: AudioContextState = "running") {
   };
 }
 
-let constructorSpy: ReturnType<typeof vi.fn>;
+let constructorSpy: ReturnType<typeof vi.fn<() => void>>;
 
 function installMockAudioContext(state: AudioContextState = "running") {
   const mockCtx = createMockAudioContextObj(state);

@@ -10,6 +10,7 @@
     "clean": "pnpm -r clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "pnpm -r --if-present typecheck",
     "prepare": "husky",
     "docs:dev": "pnpm --filter @itwillsync/docs dev",
     "docs:build": "pnpm --filter @itwillsync/docs build"
