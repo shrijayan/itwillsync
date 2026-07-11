@@ -12,16 +12,14 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    # id-token: write enables npm "Trusted Publishing" (OIDC) — @semantic-release/npm
-    # already tries this automatically before falling back to NPM_TOKEN. This half of
-    # the setup (the workflow side) is done; the other half still needs one manual,
-    # one-time step on npmjs.com that only the package owner can do (OIDC needs no
-    # secret, so an agent can't complete it): go to
-    # https://www.npmjs.com/package/itwillsync/access → Trusted Publisher → GitHub
-    # Actions, and set Organization/user "shrijayan", Repository "itwillsync",
-    # Workflow filename "release.yml" (no environment). Once that's set, publishing
-    # no longer depends on NPM_TOKEN ever expiring again — see agentlog.md for why
-    # this was added (NPM_TOKEN has been silently expired since ~May 2026).
+    # id-token: write enables npm "Trusted Publishing" (OIDC), which @semantic-release/npm
+    # tries automatically before falling back to NPM_TOKEN. Turns out this was ALREADY
+    # configured on npmjs.com for this package (verified empirically: publishing itwillsync
+    # 1.10.1 succeeded via pure OIDC, no working NPM_TOKEN involved) - id-token: write plus
+    # upgrading npm below were the only 2 things actually missing. NPM_TOKEN is kept below
+    # purely as a fallback in case OIDC trust is ever removed on npm's side; it has been
+    # silently expired since ~May 2026 (see agentlog.md) and isn't load-bearing anymore -
+    # safe to rotate or delete whenever convenient.
     permissions:
       contents: write
       issues: write
