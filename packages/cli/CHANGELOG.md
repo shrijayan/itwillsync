@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/shrijayan/itwillsync/compare/v1.10.0...v1.10.1) (2026-07-11)
+
+
+### Bug Fixes
+
+* **ci:** upgrade npm to v11 in release workflow for OIDC trusted publishing ([09f227f](https://github.com/shrijayan/itwillsync/commit/09f227fbbd6ad8b7d3348bf7f6c77b0269d8f2d8))
+
 # [1.10.0](https://github.com/shrijayan/itwillsync/compare/v1.9.1...v1.10.0) (2026-07-11)
 
 
