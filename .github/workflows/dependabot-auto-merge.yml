@@ -20,7 +20,12 @@ permissions:
 
 jobs:
   auto-merge:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    # actor check: a human pushing onto a Dependabot branch must not get an
+    # admin-bypass merge. head repo check: never act on fork PRs.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -54,7 +59,9 @@ jobs:
 
       - name: Merge (rebase, admin bypass)
         if: steps.metadata.outputs.update-type != 'version-update:semver-major'
-        run: gh pr merge --rebase --admin "$PR_URL"
+        # Pin to the SHA this run was triggered for, so a later push can't ride along.
+        run: gh pr merge --rebase --admin --match-head-commit "$HEAD_SHA" "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
