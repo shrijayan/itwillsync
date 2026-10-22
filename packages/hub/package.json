@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@itwillsync/shared": "workspace:*",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.6.5",
     "@types/ws": "^8.18.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
