@@ -1,3 +1,10 @@
+## [1.10.5](https://github.com/shrijayan/itwillsync/compare/v1.10.4...v1.10.5) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** override vite 5.x and vue to patched versions; wait for required checks to register before auto-merge ([a950d37](https://github.com/shrijayan/itwillsync/commit/a950d37acf594615fbd03991b3f96f089f9a1d07))
+
 ## [1.10.4](https://github.com/shrijayan/itwillsync/compare/v1.10.3...v1.10.4) (2026-10-22)
 
 
