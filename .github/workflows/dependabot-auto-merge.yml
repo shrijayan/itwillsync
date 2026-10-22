@@ -22,6 +22,7 @@ jobs:
   auto-merge:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
@@ -34,21 +35,26 @@ jobs:
           echo "Dependency: ${{ steps.metadata.outputs.dependency-names }}"
           echo "Update type: ${{ steps.metadata.outputs.update-type }}"
 
+      # Only patch/minor bumps merge unattended; majors wait for a human.
+      #
       # main's ruleset requires 1 approving review + rebase-only merge.
-      # RELEASE_TOKEN authenticates as the repo admin (same token release.yml
-      # uses to push semantic-release commits straight to main), which has
-      # standing bypass rights on that ruleset — so it can approve its own
-      # merge and rebase-merge without waiting on a human. GITHUB_TOKEN
-      # cannot approve a PR opened by the same workflow run's actor and has
-      # no bypass, so it would get stuck on the review requirement.
-      - name: Approve PR
-        run: gh pr review --approve "$PR_URL"
+      # RELEASE_TOKEN is the repo admin's PAT, which has "always" bypass on
+      # that ruleset, but it lacks pull-request review scope, so approving
+      # fails ("Resource not accessible by personal access token") and
+      # `--auto` would wait forever on the review rule. Instead: wait for the
+      # required CI checks to pass, then merge with --admin (bypass).
+      - name: Wait for required checks
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: |
+          sleep 30
+          gh pr checks "$PR_URL" --required --watch --fail-fast --interval 30
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-      - name: Enable auto-merge (rebase)
-        run: gh pr merge --auto --rebase "$PR_URL" || true
+      - name: Merge (rebase, admin bypass)
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --rebase --admin "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
