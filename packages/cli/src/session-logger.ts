@@ -24,7 +24,10 @@ export class SessionLogger {
     // 0o700: only owner can traverse/read the logs directory
     mkdirSync(logsDir, { recursive: true, mode: 0o700 });
 
-    this.logPath = join(logsDir, `${sessionId}.log`);
+    // sessionId embeds the user's command, which may be a path ("/usr/bin/claude")
+    // or contain "..": keep only filename-safe characters so the log stays in logsDir.
+    const safeId = sessionId.replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+/, "_");
+    this.logPath = join(logsDir, `${safeId}.log`);
     // 0o600: only owner can read the log file (contains PTY transcripts with potential secrets)
     this.stream = createWriteStream(this.logPath, { flags: "a", mode: 0o600 });
 
