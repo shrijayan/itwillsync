@@ -50,8 +50,14 @@ jobs:
       # required CI checks to pass, then merge with --admin (bypass).
       - name: Wait for required checks
         if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        # The required builds may not be registered yet when this job starts, and
+        # `gh pr checks --required` exits non-zero when it finds none, so wait for
+        # them to appear (up to 10 min) before watching.
         run: |
-          sleep 30
+          for i in $(seq 1 20); do
+            gh pr checks "$PR_URL" --required --json name --jq length 2>/dev/null | grep -qx 4 && break
+            sleep 30
+          done
           gh pr checks "$PR_URL" --required --watch --fail-fast --interval 30
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
