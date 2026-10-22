@@ -11,12 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "ws": "^8.21.0"
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@itwillsync/shared": "workspace:*",
     "@types/node": "^26.1.1",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "^8.18.2",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vite": "^8.2.4",
