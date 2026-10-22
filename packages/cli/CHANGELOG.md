@@ -1,3 +1,10 @@
+## [1.10.4](https://github.com/shrijayan/itwillsync/compare/v1.10.3...v1.10.4) (2026-10-22)
+
+
+### Bug Fixes
+
+* **cli:** sanitize session id before using it as a log filename ([94b18a7](https://github.com/shrijayan/itwillsync/commit/94b18a74954795ffb7ee57b3e19973c1717f41f3))
+
 ## [1.10.3](https://github.com/shrijayan/itwillsync/compare/v1.10.2...v1.10.3) (2026-10-22)
 
 
