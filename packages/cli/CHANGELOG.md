@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/shrijayan/itwillsync/compare/v1.10.2...v1.10.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** bump overrides to patch open Dependabot alerts ([53c5bd9](https://github.com/shrijayan/itwillsync/commit/53c5bd9123ae3c04d06b43af85bbb6fde9536545))
+
 ## [1.10.2](https://github.com/shrijayan/itwillsync/compare/v1.10.1...v1.10.2) (2026-07-11)
 
 
