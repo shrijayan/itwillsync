@@ -17,6 +17,16 @@ Sync any coding agent to your phone — one dashboard for all your sessions. Age
 
 </div>
 
+> [!NOTE]
+> **This project is not actively being developed.** I now solve this problem using these tools:
+>
+> - [Orca](https://onorca.dev)
+> - [Paseo](https://paseo.sh)
+> - [Emdash](https://emdash.com)
+> - [Superset](https://superset.sh)
+> - [T3 Code](https://t3.codes/)
+> - [Zuse](https://www.zuse.sh/)
+
 ---
 
 ## Quick Start
