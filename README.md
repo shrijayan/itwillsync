@@ -9,6 +9,8 @@
 [![npm downloads](https://img.shields.io/npm/dm/itwillsync)](https://www.npmjs.com/package/itwillsync)
 [![CI](https://github.com/shrijayan/itwillsync/actions/workflows/ci.yml/badge.svg)](https://github.com/shrijayan/itwillsync/actions/workflows/ci.yml)
 
+</div>
+
 > [!NOTE]
 > **This project is not actively being developed.** I now solve this problem using these tools:
 >
@@ -18,6 +20,8 @@
 > - [Superset](https://superset.sh)
 > - [T3 Code](https://t3.codes/)
 > - [Zuse](https://www.zuse.sh/)
+
+<div align="center">
 
 Sync any coding agent to your phone — one dashboard for all your sessions. Agent-agnostic, privacy-first, zero cloud.
 
