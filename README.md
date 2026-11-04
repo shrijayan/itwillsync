@@ -9,14 +9,6 @@
 [![npm downloads](https://img.shields.io/npm/dm/itwillsync)](https://www.npmjs.com/package/itwillsync)
 [![CI](https://github.com/shrijayan/itwillsync/actions/workflows/ci.yml/badge.svg)](https://github.com/shrijayan/itwillsync/actions/workflows/ci.yml)
 
-Sync any coding agent to your phone — one dashboard for all your sessions. Agent-agnostic, privacy-first, zero cloud.
-
-[Website](https://shrijayan.github.io/itwillsync/) | [Docs](https://shrijayan.github.io/itwillsync/docs/) | [Demo Video](https://youtu.be/Zc0Tb98CXh0)
-
-<img src="docs/assets/demo.gif" alt="itwillsync demo: running npx itwillsync claude and QR code appearing in terminal" width="700">
-
-</div>
-
 > [!NOTE]
 > **This project is not actively being developed.** I now solve this problem using these tools:
 >
@@ -26,6 +18,14 @@ Sync any coding agent to your phone — one dashboard for all your sessions. Age
 > - [Superset](https://superset.sh)
 > - [T3 Code](https://t3.codes/)
 > - [Zuse](https://www.zuse.sh/)
+
+Sync any coding agent to your phone — one dashboard for all your sessions. Agent-agnostic, privacy-first, zero cloud.
+
+[Website](https://shrijayan.github.io/itwillsync/) | [Docs](https://shrijayan.github.io/itwillsync/docs/) | [Demo Video](https://youtu.be/Zc0Tb98CXh0)
+
+<img src="docs/assets/demo.gif" alt="itwillsync demo: running npx itwillsync claude and QR code appearing in terminal" width="700">
+
+</div>
 
 ---
 
