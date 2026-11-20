@@ -14,8 +14,8 @@
 > [!NOTE]
 > **This project is not actively being developed.** I now solve this problem using these tools:
 >
+> - [Paseo](https://paseo.sh) — **recommended.** Same experience on desktop and mobile, and the mobile usage is genuinely awesome.
 > - [Orca](https://onorca.dev)
-> - [Paseo](https://paseo.sh)
 > - [Emdash](https://emdash.com)
 > - [Superset](https://superset.sh)
 > - [T3 Code](https://t3.codes/)
