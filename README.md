@@ -20,6 +20,8 @@
 > - [Superset](https://superset.sh)
 > - [T3 Code](https://t3.codes/)
 > - [Zuse](https://www.zuse.sh/)
+>
+> Comparison of these tools: [read it here](https://chatgpt.com/share/6b0019c4-436c-83ec-843a-bca841fcad0d)
 
 <div align="center">
 
